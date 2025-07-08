@@ -1,5 +1,5 @@
 // Teste simples da função serverless
-export default function handler(req, res) {
+module.exports = (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,6 +12,8 @@ export default function handler(req, res) {
     res.status(200).json({ 
         message: 'Proxy funcionando!', 
         method: req.method,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        url: req.url,
+        headers: req.headers
     });
-}
+};

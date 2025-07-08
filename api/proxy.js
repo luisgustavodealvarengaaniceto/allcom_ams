@@ -1,5 +1,5 @@
 // Vercel Serverless Function - Proxy para API JimiCloud
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -29,6 +29,9 @@ export default async function handler(req, res) {
             res.status(400).json({ error: 'Token de autenticação é obrigatório' });
             return;
         }
+
+        // Importar fetch dinamicamente
+        const fetch = (await import('node-fetch')).default;
 
         // Fazer requisição para a API JimiCloud
         const response = await fetch('http://fota-api.jimicloud.com/queryDeviceStatus', {
@@ -62,4 +65,4 @@ export default async function handler(req, res) {
             res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
         }
     }
-}
+};

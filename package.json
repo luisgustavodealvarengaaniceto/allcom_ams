@@ -1,7 +1,6 @@
 {
   "name": "allcom-jc450",
   "version": "2.0.0",
-  "type": "module",
   "description": "Sistema Allcom JC450 - Consulta de Status de Equipamentos via IMEI",
   "main": "index.html",
   "scripts": {
