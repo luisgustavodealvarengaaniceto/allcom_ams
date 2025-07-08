@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema profissional para consulta de status de equipamentos via IMEI - Allcom JC450">
+    <meta name="keywords" content="IMEI, status equipamento, firmware, Allcom, JC450, consulta dispositivo">
+    <meta name="author" content="Allcom">
+    <title>Allcom JC450 - Consulta de Status de Equipamentos</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h1>Allcom JC450</h1>
+                </div>
+                <p class="subtitle">Sistema de Consulta de Status de Equipamentos</p>
+                <a href="help.html" class="btn btn-secondary" style="margin-top: 1rem;">
+                    <i class="fas fa-question-circle"></i>
+                    Ajuda e Documentação
+                </a>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Firmware Management Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-microchip"></i> Gerenciamento de Firmware</h2>
+                    <p>Configure o firmware mais recente para comparação e atualização dos equipamentos</p>
+                </div>
+                
+                <div class="card-body">
+                    <div class="firmware-section">
+                        <label for="firmwareSelect" class="input-label">
+                            <i class="fas fa-code-branch"></i>
+                            Firmware de Referência (Mais Recente)
+                        </label>
+                        <div class="firmware-controls">
+                            <select id="firmwareSelect" class="firmware-select">
+                                <option value="">Selecione ou adicione um firmware...</option>
+                                <option value="C450Pro_2.0.16_20250526">C450Pro_2.0.16_20250526 (Mais Recente)</option>
+                                <option value="C450Pro_2.0.13_20250410">C450Pro_2.0.13_20250410</option>
+                                <option value="C450Pro_2.0.08_20241028">C450Pro_2.0.08_20241028</option>
+                                <option value="custom">✏️ Adicionar novo firmware...</option>
+                            </select>
+                            <button id="refreshFirmwareBtn" class="btn btn-secondary" title="Atualizar lista de firmware">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Custom firmware input -->
+                        <div id="customFirmwareInput" class="custom-firmware-input hidden">
+                            <input 
+                                type="text" 
+                                id="newFirmwareVersion" 
+                                class="firmware-input"
+                                placeholder="Ex: C450pro_2.0.17_250701"
+                                pattern="C450[Pp]ro_V\d+\.\d+\.\d+_\d{6}"
+                            />
+                            <div class="firmware-actions">
+                                <button id="addFirmwareBtn" class="btn btn-success">
+                                    <i class="fas fa-plus"></i>
+                                    Adicionar
+                                </button>
+                                <button id="cancelFirmwareBtn" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="firmware-info">
+                            <div id="currentFirmwareDisplay" class="current-firmware hidden">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Firmware de referência: <strong id="selectedFirmwareText">Nenhum selecionado</strong></span>
+                            </div>
+                            <div class="firmware-pattern-help">
+                                <small>
+                                    <i class="fas fa-lightbulb"></i>
+                                    Formato esperado: C450pro_[Major].[Minor].[Patch]_[YYMMDD]
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-search"></i> Consultar Status por IMEI</h2>
+                    <p>Insira os IMEIs dos equipamentos para verificar seu status atual e firmware</p>
+                </div>
+                
+                <div class="card-body">
+                    <div class="input-section">
+                        <label for="imeiInput" class="input-label">
+                            <i class="fas fa-barcode"></i>
+                            Lista de IMEIs (um por linha)
+                        </label>
+                        <div class="input-controls">
+                            <button id="loadFileBtn" class="btn btn-secondary" style="margin-bottom: 0.5rem;">
+                                <i class="fas fa-file-upload"></i>
+                                Carregar arquivo .txt
+                            </button>
+                            <input type="file" id="fileInput" accept=".txt,.csv" style="display: none;">
+                        </div>
+                        <textarea 
+                            id="imeiInput" 
+                            class="imei-textarea" 
+                            placeholder="Digite os IMEIs, um por linha. Exemplo:&#10;869247060051882&#10;868120302622664&#10;868120302622665&#10;&#10;💡 Você pode inserir quantos IMEIs precisar!&#10;O sistema processa automaticamente em lotes de 100."
+                            rows="10"
+                        ></textarea>
+                        <div class="input-helper">
+                            <span class="imei-count">0 IMEIs inseridos</span>
+                            <span class="batch-info">Processamento automático em lotes de 100</span>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button id="consultarBtn" class="btn btn-primary" disabled>
+                            <i class="fas fa-search"></i>
+                            Consultar Status
+                        </button>
+                        <button id="limparBtn" class="btn btn-secondary">
+                            <i class="fas fa-trash"></i>
+                            Limpar Lista
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loadingSection" class="loading-section hidden">
+                <div class="loading-card">
+                    <div class="spinner"></div>
+                    <h3>Consultando Status dos Equipamentos</h3>
+                    <p id="loadingText">Processando requisições...</p>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <span id="progressText" class="progress-text">0%</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="dashboard-section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-bar"></i> Dashboard de Análise</h2>
+                        <div class="dashboard-controls">
+                            <button id="toggleDashboard" class="btn btn-secondary">
+                                <i class="fas fa-eye"></i>
+                                Mostrar Dashboard
+                            </button>
+                            <div class="export-controls">
+                                <button id="exportCsv" class="btn btn-export" title="Exportar como CSV">
+                                    <i class="fas fa-file-csv"></i>
+                                    CSV
+                                </button>
+                                <button id="exportExcel" class="btn btn-export" title="Exportar como Excel">
+                                    <i class="fas fa-file-excel"></i>
+                                    Excel
+                                </button>
+                                <button id="exportJson" class="btn btn-export" title="Exportar como JSON">
+                                    <i class="fas fa-code"></i>
+                                    JSON
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dashboardContent" class="dashboard-content hidden">
+                        <div class="dashboard-grid">
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-tachometer-alt"></i> Métricas Gerais</h3>
+                                <div id="generalMetrics" class="metrics-grid">
+                                    <!-- Metrics will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-wifi"></i> Status de Conectividade</h3>
+                                <div id="connectivityChart" class="chart-container">
+                                    <!-- Chart will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-microchip"></i> Distribuição de Firmware</h3>
+                                <div id="firmwareChart" class="chart-container">
+                                    <!-- Chart will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-sd-card"></i> Status de Armazenamento</h3>
+                                <div id="storageChart" class="chart-container">
+                                    <!-- Chart will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultsSection" class="results-section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list-alt"></i> Resultados da Consulta</h2>
+                        <div class="results-summary">
+                            <span id="totalResults" class="summary-item">
+                                <i class="fas fa-mobile-alt"></i>
+                                Total: 0
+                            </span>
+                            <span id="onlineResults" class="summary-item success">
+                                <i class="fas fa-wifi"></i>
+                                Online: 0
+                            </span>
+                            <span id="offlineResults" class="summary-item warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Offline: 0
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="results-filters">
+                            <div class="filter-group">
+                                <label for="statusFilter">Filtrar por Status:</label>
+                                <select id="statusFilter" class="filter-select">
+                                    <option value="all">Todos</option>
+                                    <option value="online">Online</option>
+                                    <option value="offline">Offline</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="searchFilter">Buscar IMEI:</label>
+                                <input type="text" id="searchFilter" class="filter-input" placeholder="Digite o IMEI...">
+                            </div>
+                        </div>
+                        
+                        <div id="resultsList" class="results-list">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for device details -->
+    <div id="deviceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalhes do Equipamento</h3>
+                <button id="closeModal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="modalBody">
+                <!-- Device details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Scripts -->
+    <script src="js/reset-system.js"></script>
+    <script src="js/firmware-manager.js"></script>
+    <script src="js/cache-manager.js"></script>
+    <script src="js/performance-manager.js"></script>
+    <script src="js/dashboard-manager.js"></script>
+    <script src="js/export-manager.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/system-test.js"></script>
+</body>
+</html>

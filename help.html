@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajuda e Documentação - Allcom JC450</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-book-open"></i>
+                    <h1>Documentação Allcom JC450</h1>
+                </div>
+                <p class="subtitle">Sistema Profissional de Consulta de Status de Equipamentos</p>
+                <div class="header-buttons">
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar ao Sistema
+                    </a>
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="fas fa-print"></i>
+                        Imprimir
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegação por seções -->
+        <nav class="help-nav">
+            <div class="nav-container">
+                <a href="#inicio" class="nav-item active" onclick="showSection('inicio')">
+                    <i class="fas fa-home"></i> Início
+                </a>
+                <a href="#guia-uso" class="nav-item" onclick="showSection('guia-uso')">
+                    <i class="fas fa-play"></i> Guia de Uso
+                </a>
+                <a href="#funcionalidades" class="nav-item" onclick="showSection('funcionalidades')">
+                    <i class="fas fa-cogs"></i> Funcionalidades
+                </a>
+                <a href="#firmware" class="nav-item" onclick="showSection('firmware')">
+                    <i class="fas fa-microchip"></i> Firmware
+                </a>
+                <a href="#exportacao" class="nav-item" onclick="showSection('exportacao')">
+                    <i class="fas fa-download"></i> Exportação
+                </a>
+                <a href="#dashboard" class="nav-item" onclick="showSection('dashboard')">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="#solucao-problemas" class="nav-item" onclick="showSection('solucao-problemas')">
+                    <i class="fas fa-tools"></i> Problemas
+                </a>
+                <a href="#api" class="nav-item" onclick="showSection('api')">
+                    <i class="fas fa-code"></i> API
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Seção: Início -->
+            <section id="inicio" class="help-section active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-rocket"></i> Visão Geral do Sistema</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="overview-grid">
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <h3>Consulta de Status</h3>
+                                <p>Consulte o status de equipamentos Allcom JC450 via IMEI, com informações detalhadas de firmware, conectividade e dados técnicos.</p>
+                            </div>
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <h3>Dashboard Analítico</h3>
+                                <p>Visualize métricas em tempo real, gráficos de distribuição e análise de status dos equipamentos com relatórios detalhados.</p>
+                            </div>
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                                <h3>Gestão de Firmware</h3>
+                                <p>Compare versões de firmware, defina referências e identifique equipamentos que precisam de atualização.</p>
+                            </div>
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-file-export"></i>
+                                </div>
+                                <h3>Exportação Avançada</h3>
+                                <p>Exporte dados em formato CSV, Excel ou JSON com formatação profissional e campos organizados.</p>
+                            </div>
+                        </div>
+
+                        <div class="system-specs">
+                            <h3><i class="fas fa-info-circle"></i> Especificações do Sistema</h3>
+                            <div class="specs-grid">
+                                <div class="spec-item">
+                                    <strong>Capacidade:</strong> Ilimitado (lotes de 100 IMEIs)
+                                </div>
+                                <div class="spec-item">
+                                    <strong>Formatos Suportados:</strong> .txt, .csv para importação
+                                </div>
+                                <div class="spec-item">
+                                    <strong>Exportação:</strong> CSV, Excel (.xlsx), JSON
+                                </div>
+                                <div class="spec-item">
+                                    <strong>API:</strong> JimiCloud FOTA API
+                                </div>
+                                <div class="spec-item">
+                                    <strong>Timezone:</strong> Conversão automática China → Brasil
+                                </div>
+                                <div class="spec-item">
+                                    <strong>Cache:</strong> Sistema inteligente com performance otimizada
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Guia de Uso -->
+            <section id="guia-uso" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-play"></i> Guia de Uso Passo a Passo</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="step-guide">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h3>Inserir IMEIs</h3>
+                                    <p>Digite os IMEIs na caixa de texto (um por linha) ou carregue um arquivo .txt/.csv clicando em "Carregar arquivo .txt".</p>
+                                    <div class="step-example">
+                                        <strong>Exemplo:</strong>
+                                        <code>869247060051882<br>868120302622664<br>868120302622665</code>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h3>Validação Automática</h3>
+                                    <p>O sistema valida automaticamente cada IMEI (deve ter exatamente 15 dígitos numéricos). IMEIs inválidos são destacados em vermelho.</p>
+                                </div>
+                            </div>
+
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h3>Configurar Firmware de Referência</h3>
+                                    <p>Selecione ou defina um firmware de referência no dropdown para comparação automática. Isso permitirá identificar equipamentos desatualizados.</p>
+                                </div>
+                            </div>
+
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h3>Iniciar Consulta</h3>
+                                    <p>Clique em "Consultar Status" para iniciar o processamento. Para listas grandes, o sistema divide automaticamente em lotes de 100 IMEIs.</p>
+                                </div>
+                            </div>
+
+                            <div class="step">
+                                <div class="step-number">5</div>
+                                <div class="step-content">
+                                    <h3>Acompanhar Progresso</h3>
+                                    <p>Observe a barra de progresso detalhada que mostra o status atual: processando, sucesso, erros e progress geral.</p>
+                                </div>
+                            </div>
+
+                            <div class="step">
+                                <div class="step-number">6</div>
+                                <div class="step-content">
+                                    <h3>Analisar Resultados</h3>
+                                    <p>Visualize os resultados na lista de equipamentos. Use filtros para exibir apenas Online/Offline e busque por IMEI específico.</p>
+                                </div>
+                            </div>
+
+                            <div class="step">
+                                <div class="step-number">7</div>
+                                <div class="step-content">
+                                    <h3>Ver Detalhes e Exportar</h3>
+                                    <p>Clique em qualquer equipamento para ver detalhes completos. Use os botões de exportação para gerar relatórios em CSV, Excel ou JSON.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Funcionalidades -->
+            <section id="funcionalidades" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-cogs"></i> Funcionalidades Detalhadas</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h3><i class="fas fa-list"></i> Processamento em Lote</h3>
+                                <ul>
+                                    <li>Suporte ilimitado de IMEIs</li>
+                                    <li>Divisão automática em lotes de 100</li>
+                                    <li>Processamento paralelo otimizado</li>
+                                    <li>Retry automático em caso de falha</li>
+                                    <li>Circuit breaker para proteção da API</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <h3><i class="fas fa-filter"></i> Filtros e Busca</h3>
+                                <ul>
+                                    <li>Filtro por status: Todos/Online/Offline</li>
+                                    <li>Busca rápida por IMEI</li>
+                                    <li>Ordenação inteligente por status</li>
+                                    <li>Destaque visual de equipamentos críticos</li>
+                                    <li>Contadores em tempo real</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <h3><i class="fas fa-info-circle"></i> Informações Técnicas</h3>
+                                <ul>
+                                    <li>Versão de firmware completa</li>
+                                    <li>Status de conectividade (Online/Offline)</li>
+                                    <li>Última comunicação (horário Brasil)</li>
+                                    <li>Dias offline calculados automaticamente</li>
+                                    <li>Dados técnicos: voltagem, sinal, temperatura</li>
+                                    <li>Informações de armazenamento (SD cards)</li>
+                                    <li>Status dos canais de comunicação</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <h3><i class="fas fa-mobile-alt"></i> Interface Responsiva</h3>
+                                <ul>
+                                    <li>Design adaptativo para mobile/tablet/desktop</li>
+                                    <li>Navegação touch-friendly</li>
+                                    <li>Modais otimizados para telas pequenas</li>
+                                    <li>Gráficos responsivos</li>
+                                    <li>Tipografia otimizada</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <h3><i class="fas fa-rocket"></i> Performance</h3>
+                                <ul>
+                                    <li>Cache inteligente de tokens e resultados</li>
+                                    <li>Lazy loading de componentes</li>
+                                    <li>Debounce em filtros e busca</li>
+                                    <li>Monitoramento de performance</li>
+                                    <li>Otimização de renderização</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <h3><i class="fas fa-bell"></i> Notificações</h3>
+                                <ul>
+                                    <li>Toast notifications para feedback</li>
+                                    <li>Alertas de erro detalhados</li>
+                                    <li>Confirmações de sucesso</li>
+                                    <li>Progress indicators visuais</li>
+                                    <li>Alertas de equipamentos críticos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Firmware -->
+            <section id="firmware" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-microchip"></i> Sistema de Gestão de Firmware</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="firmware-info">
+                            <div class="firmware-card">
+                                <h3><i class="fas fa-cog"></i> Configuração de Firmware de Referência</h3>
+                                <p>Defina um firmware de referência para comparação automática com todos os equipamentos consultados.</p>
+                                <div class="firmware-steps">
+                                    <ol>
+                                        <li>Selecione um firmware predefinido no dropdown</li>
+                                        <li>Ou adicione um firmware customizado</li>
+                                        <li>O sistema comparará automaticamente todos os equipamentos</li>
+                                        <li>Equipamentos desatualizados serão destacados</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <div class="firmware-card">
+                                <h3><i class="fas fa-search"></i> Análise de Firmware</h3>
+                                <div class="firmware-analysis">
+                                    <div class="analysis-item">
+                                        <strong>Atualizado:</strong> Firmware igual ao de referência
+                                    </div>
+                                    <div class="analysis-item">
+                                        <strong>Desatualizado:</strong> Versão anterior ao de referência
+                                    </div>
+                                    <div class="analysis-item">
+                                        <strong>Mais Recente:</strong> Versão posterior ao de referência
+                                    </div>
+                                    <div class="analysis-item">
+                                        <strong>Desconhecido:</strong> Formato não reconhecido
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="firmware-card">
+                                <h3><i class="fas fa-code"></i> Formato de Firmware Suportado</h3>
+                                <div class="firmware-format">
+                                    <p><strong>Padrão:</strong> <code>C450Pro_V?[Major].[Minor].[Patch]_[YYYYMMDD ou YYMMDD]</code></p>
+                                    <div class="format-examples">
+                                        <div class="example-item">
+                                            <strong>Exemplo 1:</strong> <code>C450Pro_2.0.16_20250526</code>
+                                        </div>
+                                        <div class="example-item">
+                                            <strong>Exemplo 2:</strong> <code>C450pro_V2.0.13_250410</code>
+                                        </div>
+                                        <div class="example-item">
+                                            <strong>Exemplo 3:</strong> <code>C450Pro_2.0.08_20241028</code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="firmware-card">
+                                <h3><i class="fas fa-chart-bar"></i> Relatórios de Firmware</h3>
+                                <p>O sistema gera automaticamente relatórios detalhados mostrando:</p>
+                                <ul>
+                                    <li>Distribuição de versões de firmware</li>
+                                    <li>Percentual de equipamentos atualizados</li>
+                                    <li>Lista de equipamentos que precisam atualização</li>
+                                    <li>Prioridades de atualização (Alta/Média/Baixa)</li>
+                                    <li>Análise comparativa com firmware de referência</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Exportação -->
+            <section id="exportacao" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-download"></i> Sistema de Exportação de Dados</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="export-info">
+                            <div class="export-format">
+                                <h3><i class="fas fa-file-csv"></i> Exportação CSV</h3>
+                                <p>Formato ideal para planilhas e análise de dados.</p>
+                                <div class="export-features">
+                                    <h4>Campos Incluídos:</h4>
+                                    <div class="fields-grid">
+                                        <div class="field-group">
+                                            <strong>Identificação:</strong>
+                                            <ul>
+                                                <li>IMEI</li>
+                                                <li>Status (Online/Offline)</li>
+                                                <li>Servidor</li>
+                                            </ul>
+                                        </div>
+                                        <div class="field-group">
+                                            <strong>Firmware:</strong>
+                                            <ul>
+                                                <li>Versão do Firmware</li>
+                                                <li>Comparação com Referência</li>
+                                                <li>Prioridade de Atualização</li>
+                                            </ul>
+                                        </div>
+                                        <div class="field-group">
+                                            <strong>Conectividade:</strong>
+                                            <ul>
+                                                <li>Última Comunicação</li>
+                                                <li>Dias Offline</li>
+                                                <li>Qualidade do Sinal (CSQ)</li>
+                                                <li>ICCID</li>
+                                            </ul>
+                                        </div>
+                                        <div class="field-group">
+                                            <strong>Hardware:</strong>
+                                            <ul>
+                                                <li>Potência (V)</li>
+                                                <li>Temperatura CPU (°C)</li>
+                                                <li>Status Rede/GPS/ACC</li>
+                                            </ul>
+                                        </div>
+                                        <div class="field-group">
+                                            <strong>Armazenamento:</strong>
+                                            <ul>
+                                                <li>SD1: Status, Usado, Total, %</li>
+                                                <li>SD2: Status, Usado, Total, %</li>
+                                                <li>Memória Interna: Usado, Total, %</li>
+                                            </ul>
+                                        </div>
+                                        <div class="field-group">
+                                            <strong>Canais:</strong>
+                                            <ul>
+                                                <li>Canal 1 Status</li>
+                                                <li>Canal 2 Status</li>
+                                                <li>Canal 3 Status</li>
+                                                <li>Canal 4 Status</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="export-format">
+                                <h3><i class="fas fa-file-excel"></i> Exportação Excel</h3>
+                                <p>Formato completo com múltiplas abas e formatação profissional.</p>
+                                <div class="excel-tabs">
+                                    <div class="tab-info">
+                                        <h4>Aba "Equipamentos"</h4>
+                                        <p>Dados completos de todos os equipamentos com formatação organizada e colunas bem definidas.</p>
+                                    </div>
+                                    <div class="tab-info">
+                                        <h4>Aba "Resumo"</h4>
+                                        <p>Dashboard com métricas gerais: total de equipamentos, online/offline, problemas identificados, etc.</p>
+                                    </div>
+                                    <div class="tab-info">
+                                        <h4>Aba "Problemas"</h4>
+                                        <p>Lista detalhada de equipamentos com problemas: bateria crítica, offline prolongado, armazenamento cheio.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="export-format">
+                                <h3><i class="fas fa-file-code"></i> Exportação JSON</h3>
+                                <p>Formato estruturado para integração com outros sistemas.</p>
+                                <div class="json-structure">
+                                    <h4>Estrutura do Arquivo:</h4>
+                                    <div class="json-example">
+                                        <pre><code>{
+  "metadata": {
+    "exported_at": "ISO timestamp",
+    "total_devices": 150,
+    "online_devices": 120,
+    "offline_devices": 30,
+    "export_version": "2.0"
+  },
+  "summary": {
+    "firmware_distribution": {...},
+    "avg_offline_days": 2.5,
+    "critical_battery": 5
+  },
+  "devices": [
+    {
+      "imei": "869247060051882",
+      "status": {...},
+      "hardware": {...},
+      "connectivity": {...},
+      "storage": {...},
+      "channels": {...},
+      "firmware_analysis": {...},
+      "raw_data": {...}
+    }
+  ]
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Dashboard -->
+            <section id="dashboard" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-line"></i> Dashboard Analítico</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="dashboard-info">
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-tachometer-alt"></i> Métricas em Tempo Real</h3>
+                                <div class="metrics-grid">
+                                    <div class="metric-item">
+                                        <strong>Total de Equipamentos:</strong> Contador geral de dispositivos consultados
+                                    </div>
+                                    <div class="metric-item">
+                                        <strong>Online/Offline:</strong> Distribuição de status com percentuais
+                                    </div>
+                                    <div class="metric-item">
+                                        <strong>Bateria Crítica:</strong> Equipamentos com voltagem < 11.5V
+                                    </div>
+                                    <div class="metric-item">
+                                        <strong>Média Offline:</strong> Tempo médio que equipamentos ficam offline
+                                    </div>
+                                    <div class="metric-item">
+                                        <strong>Problemas de Armazenamento:</strong> SD cards com uso > 90%
+                                    </div>
+                                    <div class="metric-item">
+                                        <strong>Distribuição de Firmware:</strong> Análise de versões em uso
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-chart-pie"></i> Gráficos Visuais</h3>
+                                <ul>
+                                    <li><strong>Gráfico Pizza:</strong> Distribuição Online vs Offline</li>
+                                    <li><strong>Gráfico Barras:</strong> Status por categoria (Online, Offline, Crítico)</li>
+                                    <li><strong>Distribuição de Firmware:</strong> Versões mais utilizadas</li>
+                                    <li><strong>Timeline:</strong> Histórico de última comunicação</li>
+                                </ul>
+                            </div>
+
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-exclamation-triangle"></i> Alertas e Problemas</h3>
+                                <div class="alert-types">
+                                    <div class="alert-item critical">
+                                        <strong>Crítico:</strong> Bateria muito baixa (< 11V)
+                                    </div>
+                                    <div class="alert-item warning">
+                                        <strong>Atenção:</strong> Offline há mais de 7 dias
+                                    </div>
+                                    <div class="alert-item info">
+                                        <strong>Informação:</strong> Armazenamento acima de 90%
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-card">
+                                <h3><i class="fas fa-sync-alt"></i> Atualização Automática</h3>
+                                <p>O dashboard é atualizado automaticamente sempre que:</p>
+                                <ul>
+                                    <li>Uma nova consulta é realizada</li>
+                                    <li>Filtros são aplicados aos resultados</li>
+                                    <li>Dados são carregados do cache</li>
+                                    <li>Firmware de referência é alterado</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Solução de Problemas -->
+            <section id="solucao-problemas" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-tools"></i> Solução de Problemas</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="troubleshooting">
+                            <div class="problem-category">
+                                <h3><i class="fas fa-exclamation-circle"></i> Problemas com IMEIs</h3>
+                                <div class="problem-item">
+                                    <h4>IMEI Inválido</h4>
+                                    <p><strong>Sintomas:</strong> Mensagem de erro, IMEI destacado em vermelho</p>
+                                    <p><strong>Causa:</strong> IMEI não tem 15 dígitos ou contém caracteres não numéricos</p>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Verifique se o IMEI tem exatamente 15 dígitos</li>
+                                        <li>Remova espaços, traços ou outros caracteres</li>
+                                        <li>Confirme se não há zeros à esquerda faltando</li>
+                                    </ul>
+                                </div>
+
+                                <div class="problem-item">
+                                    <h4>Arquivo não Carregou</h4>
+                                    <p><strong>Sintomas:</strong> Erro ao carregar arquivo .txt ou .csv</p>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Verifique se o arquivo está no formato .txt ou .csv</li>
+                                        <li>Confirme que há um IMEI por linha</li>
+                                        <li>Remova cabeçalhos ou linhas em branco</li>
+                                        <li>Verifique a codificação do arquivo (UTF-8 recomendado)</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="problem-category">
+                                <h3><i class="fas fa-wifi"></i> Problemas de Conectividade</h3>
+                                <div class="problem-item">
+                                    <h4>Erro de Rede/API</h4>
+                                    <p><strong>Sintomas:</strong> Falha na consulta, timeout, erro HTTP</p>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Verifique sua conexão com a internet</li>
+                                        <li>Tente reduzir o número de IMEIs por consulta</li>
+                                        <li>Aguarde alguns minutos e tente novamente</li>
+                                        <li>Verifique se não há proxy/firewall bloqueando</li>
+                                    </ul>
+                                </div>
+
+                                <div class="problem-item">
+                                    <h4>Timeout da Requisição</h4>
+                                    <p><strong>Sintomas:</strong> Consulta trava ou demora muito</p>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Reduza o número de IMEIs (máximo 50 por vez)</li>
+                                        <li>Verifique a estabilidade da internet</li>
+                                        <li>Tente em horários de menor tráfego</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="problem-category">
+                                <h3><i class="fas fa-database"></i> Problemas com Dados</h3>
+                                <div class="problem-item">
+                                    <h4>Dados Incompletos</h4>
+                                    <p><strong>Sintomas:</strong> Informações faltando ou "N/A"</p>
+                                    <p><strong>Causa:</strong> Normal para equipamentos offline ou com problemas</p>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Verifique se o equipamento está realmente online</li>
+                                        <li>Consulte novamente após algumas horas</li>
+                                        <li>Confirme se o IMEI está correto</li>
+                                    </ul>
+                                </div>
+
+                                <div class="problem-item">
+                                    <h4>Cache Desatualizado</h4>
+                                    <p><strong>Sintomas:</strong> Dados antigos sendo exibidos</p>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Force uma nova consulta sem usar cache</li>
+                                        <li>Limpe o cache do navegador (F5 + Ctrl)</li>
+                                        <li>Use modo incógnito para teste</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="problem-category">
+                                <h3><i class="fas fa-mobile-alt"></i> Problemas de Interface</h3>
+                                <div class="problem-item">
+                                    <h4>Layout Quebrado no Mobile</h4>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Atualize o navegador para a versão mais recente</li>
+                                        <li>Tente rotacionar a tela (landscape/portrait)</li>
+                                        <li>Zoom out se necessário</li>
+                                    </ul>
+                                </div>
+
+                                <div class="problem-item">
+                                    <h4>Exportação não Funciona</h4>
+                                    <p><strong>Solução:</strong></p>
+                                    <ul>
+                                        <li>Verifique se há dados para exportar</li>
+                                        <li>Permita downloads no navegador</li>
+                                        <li>Tente um formato diferente (CSV em vez de Excel)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: API -->
+            <section id="api" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-code"></i> Informações Técnicas da API</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="api-info">
+                            <div class="api-card">
+                                <h3><i class="fas fa-link"></i> Endpoint da API</h3>
+                                <div class="api-details">
+                                    <p><strong>URL:</strong> <code>http://fota-api.jimicloud.com/queryDeviceStatus</code></p>
+                                    <p><strong>Método:</strong> <code>POST</code></p>
+                                    <p><strong>Autenticação:</strong> Bearer Token</p>
+                                    <p><strong>Content-Type:</strong> <code>application/json</code></p>
+                                </div>
+                            </div>
+
+                            <div class="api-card">
+                                <h3><i class="fas fa-cog"></i> Configurações de Requisição</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <strong>Timeout:</strong> 30 segundos
+                                    </div>
+                                    <div class="config-item">
+                                        <strong>Retry:</strong> 3 tentativas
+                                    </div>
+                                    <div class="config-item">
+                                        <strong>Lote Máximo:</strong> 100 IMEIs
+                                    </div>
+                                    <div class="config-item">
+                                        <strong>Rate Limit:</strong> Circuit breaker ativo
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="api-card">
+                                <h3><i class="fas fa-exchange-alt"></i> Formato da Requisição</h3>
+                                <div class="api-example">
+                                    <pre><code>{
+  "imei": [
+    "869247060051882",
+    "868120302622664",
+    "868120302622665"
+  ]
+}</code></pre>
+                                </div>
+                            </div>
+
+                            <div class="api-card">
+                                <h3><i class="fas fa-download"></i> Estrutura da Resposta</h3>
+                                <div class="response-structure">
+                                    <h4>Campos Principais:</h4>
+                                    <ul>
+                                        <li><strong>imei:</strong> IMEI do equipamento</li>
+                                        <li><strong>version:</strong> Versão do firmware</li>
+                                        <li><strong>lastTime:</strong> Timestamp da última comunicação</li>
+                                        <li><strong>iccid:</strong> Identificador do SIM card</li>
+                                        <li><strong>server:</strong> Servidor de comunicação</li>
+                                        <li><strong>log:</strong> Log de status do equipamento</li>
+                                        <li><strong>selfCheckParam:</strong> Parâmetros de autodiagnóstico</li>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="api-card">
+                                <h3><i class="fas fa-clock"></i> Processamento de Dados</h3>
+                                <div class="processing-steps">
+                                    <ol>
+                                        <li><strong>Conversão de Timezone:</strong> China (UTC+8) → Brasil (UTC-3)</li>
+                                        <li><strong>Parsing de Firmware:</strong> Extração da versão do campo adequado</li>
+                                        <li><strong>Cálculo de Status:</strong> Online se comunicação < 24h</li>
+                                        <li><strong>Análise de selfCheckParam:</strong> Extração de dados técnicos</li>
+                                        <li><strong>Comparação de Firmware:</strong> Com versão de referência</li>
+                                        <li><strong>Cache de Resultados:</strong> Armazenamento local para performance</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <div class="api-card">
+                                <h3><i class="fas fa-shield-alt"></i> Tratamento de Erros</h3>
+                                <div class="error-handling">
+                                    <div class="error-type">
+                                        <strong>Erro 401:</strong> Token inválido ou expirado
+                                    </div>
+                                    <div class="error-type">
+                                        <strong>Erro 429:</strong> Rate limit excedido
+                                    </div>
+                                    <div class="error-type">
+                                        <strong>Erro 500:</strong> Erro interno do servidor
+                                    </div>
+                                    <div class="error-type">
+                                        <strong>Timeout:</strong> Requisição demorou mais que 30s
+                                    </div>
+                                    <div class="error-type">
+                                        <strong>Network Error:</strong> Falha de conectividade
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer com informações adicionais -->
+        <footer class="help-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-info-circle"></i> Sobre o Sistema</h3>
+                    <p>Sistema Allcom JC450 desenvolvido para consulta profissional de status de equipamentos via API JimiCloud.</p>
+                </div>
+                <div class="footer-section">
+                    <h3><i class="fas fa-code"></i> Tecnologias</h3>
+                    <p>HTML5, CSS3, JavaScript ES6+, Font Awesome, Google Fonts</p>
+                </div>
+                <div class="footer-section">
+                    <h3><i class="fas fa-calendar"></i> Última Atualização</h3>
+                    <p>Julho 2025 - Versão 2.0</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- CSS adicional para a documentação -->
+    <style>
+        /* Navegação por seções */
+        .help-nav {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 2px solid #e2e8f0;
+            z-index: 100;
+            margin-bottom: 2rem;
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .nav-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Header melhorado */
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Seções de ajuda */
+        .help-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .help-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Overview cards */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .overview-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .overview-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .overview-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .overview-card p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Specs grid */
+        .system-specs {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .spec-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        /* Step guide */
+        .step-guide {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-example {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+
+        /* Feature grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #667eea;
+        }
+
+        .feature-card h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-card ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .feature-card li {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        /* Firmware info */
+        .firmware-info, .export-info, .dashboard-info, .api-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .firmware-card, .export-format, .dashboard-card, .api-card {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .firmware-steps ol {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .firmware-analysis, .analysis-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .firmware-format {
+            margin-top: 1rem;
+        }
+
+        .format-examples, .example-item {
+            margin-top: 0.5rem;
+        }
+
+        .example-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Export features */
+        .fields-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .field-group {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .field-group strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .field-group ul {
+            margin: 0;
+            padding-left: 1rem;
+        }
+
+        .excel-tabs {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .tab-info {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .json-example {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .json-example pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        /* Dashboard info */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .alert-types {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .alert-item {
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .alert-item.critical {
+            background: #fed7d7;
+            border-color: #e53e3e;
+        }
+
+        .alert-item.warning {
+            background: #fefcbf;
+            border-color: #d69e2e;
+        }
+
+        .alert-item.info {
+            background: #bee3f8;
+            border-color: #3182ce;
+        }
+
+        /* Troubleshooting */
+        .troubleshooting {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .problem-category h3 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .problem-item {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid #ed8936;
+            margin-bottom: 1.5rem;
+        }
+
+        .problem-item h4 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .problem-item p {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .problem-item ul {
+            margin: 0.5rem 0 0 1.5rem;
+            color: #4a5568;
+        }
+
+        /* API info */
+        .api-details {
+            margin-top: 1rem;
+        }
+
+        .api-details p {
+            margin-bottom: 0.5rem;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .config-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .api-example {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .response-structure h4 {
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        .processing-steps ol {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .processing-steps li {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .error-handling {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .error-type {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #e53e3e;
+        }
+
+        /* Footer */
+        .help-footer {
+            background: #2d3748;
+            color: white;
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-section p {
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .overview-grid, .feature-grid, .fields-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .nav-container {
+                justify-content: flex-start;
+            }
+            
+            .header-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+            .help-nav, .header-buttons {
+                display: none;
+            }
+            
+            .help-section {
+                display: block !important;
+                page-break-before: always;
+            }
+            
+            .help-section:first-child {
+                page-break-before: auto;
+            }
+        }
+
+        /* Código highlight */
+        code {
+            background: #edf2f7;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            color: #2d3748;
+        }
+    </style>
+
+    <!-- JavaScript para navegação -->
+    <script>
+        function showSection(sectionId) {
+            // Remove active class from all sections and nav items
+            document.querySelectorAll('.help-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to target section and nav item
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelector(`[href="#${sectionId}"]`).classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('inicio');
+        });
+    </script>
+</body>
+</html>
