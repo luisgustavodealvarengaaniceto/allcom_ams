@@ -6,9 +6,7 @@
   "scripts": {
     "start": "node proxy-server.js",
     "dev": "nodemon proxy-server.js",
-    "test": "node test-auth.js",
-    "build": "echo 'No build step required for static site'",
-    "vercel-build": "echo 'Vercel build complete'"
+    "test": "node test-auth.js"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -23,10 +23,28 @@
                     <h1>Allcom JC450</h1>
                 </div>
                 <p class="subtitle">Sistema de Consulta de Status de Equipamentos</p>
-                <a href="help.html" class="btn btn-secondary" style="margin-top: 1rem;">
-                    <i class="fas fa-question-circle"></i>
-                    Ajuda e Documentação
-                </a>
+                
+                <!-- User Info and Actions -->
+                <div class="user-section" id="userSection" style="margin-top: 1rem; display: none;">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="userName">Usuário</span>
+                        <span class="user-role" id="userRole">Perfil</span>
+                    </div>
+                    <div class="user-actions">
+                        <button id="logoutBtn" class="btn btn-outline" style="margin-left: 1rem;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sair
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="header-actions" style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center;">
+                    <a href="help.html" class="btn btn-secondary">
+                        <i class="fas fa-question-circle"></i>
+                        Ajuda e Documentação
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -278,7 +296,10 @@
     <!-- SheetJS for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- Scripts -->
+    <!-- Production Configuration (remove logs em produção) -->
+    <script src="js/production-config.js"></script>
+    
+    <!-- Scripts (auth carregado por último para verificar após tudo estar pronto) -->
     <script src="js/reset-system.js"></script>
     <script src="js/firmware-manager.js"></script>
     <script src="js/cache-manager.js"></script>
@@ -286,6 +307,12 @@
     <script src="js/dashboard-manager.js"></script>
     <script src="js/export-manager.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/system-test.js"></script>
+    
+    <!-- Test Modal (remover após teste) -->
+    <script src="js/test-modal.js"></script>
+    <script src="js/test-extract-fix.js"></script>
+    
+    <!-- Authentication (carregado por último) -->
+    <script src="js/auth.js"></script>
 </body>
 </html>

@@ -1,68 +1,68 @@
-// Vercel Serverless Function - Proxy para API JimiCloud
+// Proxy para API JimiCloud - Versão Simplificada
 module.exports = async (req, res) => {
-    // Configurar CORS
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
-    // Responder a OPTIONS (preflight)
+    // Handle OPTIONS
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
 
-    // Verificar se é POST
+    // Only allow POST
     if (req.method !== 'POST') {
-        res.status(405).json({ error: 'Método não permitido' });
+        res.status(405).json({ error: 'Only POST allowed' });
         return;
     }
 
     try {
-        const { imeis, token } = req.body;
+        const { imeis, token } = req.body || {};
 
+        // Validation
         if (!imeis || !Array.isArray(imeis) || imeis.length === 0) {
-            res.status(400).json({ error: 'Lista de IMEIs é obrigatória' });
+            res.status(400).json({ error: 'IMEIs array required' });
             return;
         }
 
         if (!token) {
-            res.status(400).json({ error: 'Token de autenticação é obrigatório' });
+            res.status(400).json({ error: 'Token required' });
             return;
         }
 
-        // Importar fetch dinamicamente
-        const fetch = (await import('node-fetch')).default;
+        // Import fetch (works with both Node 18+ and older versions)
+        let fetch;
+        try {
+            // Try native fetch first (Node 18+)
+            fetch = globalThis.fetch;
+        } catch {
+            // Fallback to node-fetch
+            fetch = require('node-fetch');
+        }
 
-        // Fazer requisição para a API JimiCloud
+        // API Request
         const response = await fetch('http://fota-api.jimicloud.com/queryDeviceStatus', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({
-                imeis: imeis
-            })
+            body: JSON.stringify({ imeis })
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`API Error: ${response.status}`);
         }
 
         const data = await response.json();
-        
-        // Retornar os dados
         res.status(200).json(data);
 
     } catch (error) {
-        console.error('Erro no proxy:', error);
-        
-        if (error.name === 'AbortError') {
-            res.status(408).json({ error: 'Timeout na requisição' });
-        } else if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
-            res.status(503).json({ error: 'Serviço temporariamente indisponível' });
-        } else {
-            res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
-        }
+        console.error('Proxy Error:', error);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            message: error.message 
+        });
     }
 };

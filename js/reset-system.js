@@ -1,5 +1,19 @@
-// Reset script para limpar cache e resolver conflitos
+// Reset script para limpar cache e resolver conflitos (preservando login)
 console.log('🧹 Iniciando limpeza do sistema...');
+
+// Verificar se há uma sessão de login válida antes de começar
+const existingSession = localStorage.getItem('allcom_session');
+if (existingSession) {
+    try {
+        const sessionData = JSON.parse(existingSession);
+        if (sessionData.user && sessionData.user.username) {
+            console.log('🔐 Sessão de login detectada para:', sessionData.user.username);
+            console.log('✅ Sessão será preservada durante a limpeza');
+        }
+    } catch (e) {
+        console.log('⚠️ Sessão corrompida detectada, será removida');
+    }
+}
 
 // Clear all existing variables
 if (typeof window !== 'undefined') {
@@ -17,18 +31,19 @@ if (typeof window !== 'undefined') {
     console.log('✅ Variáveis globais limpas');
 }
 
-// Clear localStorage cache
+// Clear localStorage cache (preservando sessão de login)
 try {
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('allcom_')) {
+        // Limpar apenas cache, preservando sessão de autenticação
+        if (key && key.startsWith('allcom_') && key !== 'allcom_session') {
             keysToRemove.push(key);
         }
     }
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log(`✅ Cache localStorage limpo (${keysToRemove.length} itens removidos)`);
+    console.log(`✅ Cache localStorage limpo (${keysToRemove.length} itens removidos) - Sessão preservada`);
 } catch (error) {
     console.log('⚠️ Erro ao limpar localStorage:', error.message);
 }
@@ -86,8 +101,17 @@ function forceRefresh() {
 function clearAllCaches() {
     console.log('🧹 Limpando todos os caches...');
     
+    // Preservar sessão de login antes de limpar
+    const session = localStorage.getItem('allcom_session');
+    
     // Clear localStorage
     localStorage.clear();
+    
+    // Restaurar sessão de login
+    if (session) {
+        localStorage.setItem('allcom_session', session);
+        console.log('✅ Sessão de login preservada após limpeza');
+    }
     
     // Clear sessionStorage
     sessionStorage.clear();

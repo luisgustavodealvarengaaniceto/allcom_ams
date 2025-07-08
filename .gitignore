@@ -147,6 +147,12 @@ settings.local.json
 secrets/
 credentials/
 
+# === ARQUIVOS CONFIDENCIAIS ===
+CREDENCIAIS-ADMIN.md
+*.credentials
+*.secrets
+auth-keys.*
+
 # === BUILD ARTIFACTS ===
 build/
 out/

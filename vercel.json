@@ -1,3 +1,9 @@
 {
-  "version": 2
+  "version": 2,
+  "name": "allcom-jc450",
+  "functions": {
+    "api/*.js": {
+      "runtime": "@vercel/node@latest"
+    }
+  }
 }

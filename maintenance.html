@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema em manutenção - Allcom JC450">
+    <title>Allcom JC450 - Em Manutenção</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --secondary-color: #3949ab;
+            --accent-color: #00acc1;
+            --text-color: #333;
+            --light-text: #757575;
+            --bg-color: #f5f7fa;
+            --card-color: #fff;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .maintenance-container {
+            max-width: 600px;
+            background-color: var(--card-color);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin: 0 auto;
+        }
+        
+        .icon {
+            font-size: 64px;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            font-size: 28px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+            color: var(--light-text);
+        }
+        
+        .info {
+            margin-top: 32px;
+            padding: 16px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .timestamp {
+            margin-top: 40px;
+            font-size: 14px;
+            color: var(--light-text);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo i {
+            font-size: 32px;
+            margin-right: 12px;
+            color: var(--primary-color);
+        }
+        
+        .logo h2 {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 600px) {
+            .maintenance-container {
+                padding: 24px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="maintenance-container">
+        <div class="logo">
+            <i class="fas fa-mobile-alt"></i>
+            <h2>Allcom JC450</h2>
+        </div>
+        
+        <div class="icon">
+            <i class="fas fa-wrench"></i>
+        </div>
+        
+        <h1>Sistema em Manutenção</h1>
+        
+        <p>
+            Estamos realizando uma atualização no sistema para melhorar sua experiência.
+            Pedimos desculpas pelo inconveniente e solicitamos que tente novamente em breve.
+        </p>
+        
+        <div class="info">
+            <p style="margin-bottom: 0; color: var(--text-color);">
+                <i class="fas fa-clock"></i> Previsão de retorno: <strong id="returnTime">em breve</strong>
+            </p>
+        </div>
+        
+        <p class="timestamp">
+            Iniciado em: <span id="startTime"></span>
+        </p>
+    </div>
+
+    <script>
+        // Configure o horário de retorno previsto
+        const returnDate = new Date();
+        returnDate.setHours(returnDate.getHours() + 2); // 2 horas à frente
+        
+        document.getElementById('returnTime').textContent = returnDate.toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        document.getElementById('startTime').textContent = new Date().toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    </script>
+</body>
+</html>

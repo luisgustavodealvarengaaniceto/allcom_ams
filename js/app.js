@@ -6,14 +6,11 @@ if (window.allcomAppInitialized) {
 
 // API Configuration
 const API_CONFIG = {
-    endpoint: 'http://fota-api.jimicloud.com',
-    // Detectar se está em produção (Vercel) ou desenvolvimento local
-    proxyEndpoint: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3001/api' 
-        : '/api', // Usar API do Vercel em produção
+    endpoint: 'http://fota-api.jimicloud.com', // HTTPS para produção
+    proxyEndpoint: 'http://localhost:3001/api', // HTTPS para proxy
     appKey: 'Jimiiotbrasil',
     secret: '23dd6cca658b4ec298aeb7beb4972fd4',
-    maxBatchSize: 100
+    maxBatchSize: 99
 };
 
 // Global state
@@ -746,7 +743,9 @@ function parseSelfCheckParam(selfCheckParam) {
     const pairs = selfCheckParam.split(';');
     
     pairs.forEach(pair => {
-        const [key, value] = pair.split(':');
+        const parts = pair.split(':');
+        const key = parts[0];
+        const value = parts[1];
         if (key && value) {
             parsed[key.trim()] = value.trim();
         }
@@ -765,35 +764,56 @@ function extractSDCardInfo(log) {
         memory: null
     };
     
-    // Extract SD1 info: SD1:233 GB/2.18 GB
+    // Função segura para extrair informações
+    function safeExtract(match) {
+        if (!match || !match[1]) return { total: 'N/A', used: 'N/A' };
+        
+        const value = match[1].trim();
+        // Verifica se há uma barra no valor (formato: total/usado)
+        if (value.includes('/')) {
+            const parts = value.split('/');
+            return {
+                total: parts[0] ? parts[0].trim() : 'N/A',
+                used: parts[1] ? parts[1].trim() : 'N/A'
+            };
+        } else {
+            // Se não tem barra, assume que só tem o valor total
+            return {
+                total: value,
+                used: 'N/A'
+            };
+        }
+    }
+    
+    // Extract SD1 info: SD1:233 GB/2.18 GB (ou simplesmente SD1:233 GB)
     const sd1Match = log.match(/SD1:([^,]+)/);
     if (sd1Match) {
-        const [total, used] = sd1Match[1].trim().split('/');
+        const info = safeExtract(sd1Match);
         sdInfo.sd1 = {
-            total: total.trim(),
-            used: used.trim(),
+            total: info.total,
+            used: info.used,
             status: 'Conectado'
         };
     }
     
-    // Extract SD2 info: SD2:233 GB/2.06 GB
+    // Extract SD2 info: SD2:233 GB/2.06 GB (ou simplesmente SD2:233 GB)
     const sd2Match = log.match(/SD2:([^,]+)/);
     if (sd2Match) {
-        const [total, used] = sd2Match[1].trim().split('/');
+        const info = safeExtract(sd2Match);
         sdInfo.sd2 = {
-            total: total.trim(),
-            used: used.trim(),
+            total: info.total,
+            used: info.used,
             status: 'Conectado'
         };
     }
     
-    // Extract memory info: MEMORY:2.75 GB/561 MB
+    // Extract memory info: MEMORY:2.75 GB/561 MB (ou simplesmente MEMORY:2.75 GB)
     const memoryMatch = log.match(/MEMORY:([^,]+)/);
     if (memoryMatch) {
-        const [total, used] = memoryMatch[1].trim().split('/');
+        const info = safeExtract(memoryMatch);
         sdInfo.memory = {
-            total: total.trim(),
-            used: used.trim()
+            total: info.total,
+            used: info.used
         };
     }
     
@@ -1023,7 +1043,6 @@ function applyFilters() {
 // Show device details in modal
 function showDeviceDetails(imei) {
     console.log('🔍 Mostrando detalhes do dispositivo:', imei);
-    console.trace('Stack trace para showDeviceDetails:');
     
     const device = deviceResults.find(d => d.imei === imei);
     if (!device) {

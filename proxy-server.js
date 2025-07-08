@@ -2,10 +2,22 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+
+// Importar configurações de segurança se o arquivo existir
+let securityModule;
+try {
+    securityModule = require('./js/security-config');
+    console.log('✅ Configurações de segurança carregadas');
+} catch (err) {
+    console.log('⚠️ Arquivo de configuração de segurança não encontrado, usando padrões');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || 'localhost';
 
 // Configuration from environment variables
 const CONFIG = {
@@ -26,12 +38,58 @@ console.log('⏱️ Timeout:', CONFIG.API_TIMEOUT + 'ms');
 console.log('📦 Max Batch Size:', CONFIG.MAX_BATCH_SIZE);
 
 // Enable CORS for all routes
-app.use(cors({
+app.use(cors(securityModule?.securityConfig?.cors || {
     origin: CONFIG.CORS_ORIGIN,
     methods: process.env.CORS_METHODS || 'GET,POST,PUT,DELETE,OPTIONS',
-    allowedHeaders: process.env.CORS_HEADERS || 'X-Requested-With,Content-Type,Authorization'
+    allowedHeaders: process.env.CORS_HEADERS || 'X-Requested-With,Content-Type,Authorization',
+    credentials: true
 }));
 app.use(express.json());
+
+// Aplicar configurações de segurança se disponíveis
+if (securityModule && securityModule.applySecurityConfig) {
+    securityModule.applySecurityConfig(app);
+    console.log('🔒 Cabeçalhos de segurança aplicados');
+}
+
+// Serve static files from the current directory
+app.use(express.static(__dirname));
+
+// Specific route for users.json with proper headers
+app.get('/users.json', (req, res) => {
+    const usersPath = path.join(__dirname, 'users.json');
+    
+    try {
+        if (fs.existsSync(usersPath)) {
+            const usersData = fs.readFileSync(usersPath, 'utf8');
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.send(usersData);
+        } else {
+            console.log('Arquivo users.json não encontrado, retornando configuração padrão');
+            res.status(404).json({ 
+                error: 'Arquivo users.json não encontrado',
+                message: 'Use configuração padrão no frontend'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao ler users.json:', error);
+        res.status(500).json({ 
+            error: 'Erro interno do servidor',
+            message: 'Não foi possível carregar configuração de usuários'
+        });
+    }
+});
+
+// Route to serve login page as index if no specific file is requested
+app.get('/', (req, res) => {
+    const loginPath = path.join(__dirname, 'login.html');
+    if (fs.existsSync(loginPath)) {
+        res.sendFile(loginPath);
+    } else {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    }
+});
 
 // Global token storage
 let authToken = null;
@@ -163,7 +221,7 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
         if (!response.ok && response.status === 401) {
             console.log('Proxy: Bearer falhou, tentando header "token"');
             
-            response = await fetch(`${API_CONFIG.endpoint}/queryDeviceStatus`, {
+            response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
                 method: 'POST',
                 headers: {
                     'token': token,
@@ -263,9 +321,30 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Proxy servidor funcionando' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor proxy rodando na porta ${PORT}`);
-    console.log(`Endpoint: http://localhost:${PORT}/api/queryDeviceStatus`);
+app.listen(PORT, HOST, () => {
+    const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
+    const isProd = process.env.NODE_ENV === 'production';
+    
+    console.log('');
+    console.log('🎉 Servidor Allcom JC450 iniciado com sucesso!');
+    console.log(`📡 Servidor proxy rodando em ${HOST}:${PORT}`);
+    console.log(`🔒 Ambiente: ${isProd ? 'PRODUÇÃO' : 'desenvolvimento'}`);
+    console.log(`🌐 CORS: ${CONFIG.CORS_ORIGIN}`);
+    console.log('');
+    console.log(`🌐 Aplicação disponível em: ${baseUrl}`);
+    console.log(`🔐 Login: ${baseUrl}/login.html`);
+    console.log(`📊 Sistema: ${baseUrl}/index.html`);
+    console.log(`🔧 API Proxy: ${baseUrl}/api/queryDeviceStatus`);
+    console.log(`� Health check: ${baseUrl}/health`);
+    console.log('');
+    console.log(`✅ Pronto para uso! Acesse ${baseUrl} para começar`);
+    
+    if (isProd) {
+        console.log('');
+        console.log('⚠️ AVISO: Sistema rodando em modo PRODUÇÃO');
+        console.log('⚠️ Logs detalhados estão desabilitados');
+        console.log('⚠️ Apenas erros críticos serão exibidos no console');
+    }
 });
 
 module.exports = app;

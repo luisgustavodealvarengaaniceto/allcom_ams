@@ -63,6 +63,66 @@ body {
     font-weight: 400;
 }
 
+/* === USER SECTION === */
+.user-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.user-info i {
+    font-size: 1.2rem;
+    color: #667eea;
+}
+
+.user-role {
+    background: #667eea;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #667eea;
+    color: #667eea;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
 /* Card components */
 .card {
     background: rgba(255, 255, 255, 0.95);
@@ -1411,4 +1471,25 @@ body {
     .stat-number {
         font-size: 1.5rem;
     }
+}
+
+/* === ROLE-SPECIFIC STYLES === */
+.role-admin {
+    background: linear-gradient(135deg, #e53e3e, #c53030) !important;
+}
+
+.role-manager {
+    background: linear-gradient(135deg, #d69e2e, #b7791f) !important;
+}
+
+.role-technician {
+    background: linear-gradient(135deg, #38a169, #2f855a) !important;
+}
+
+.role-viewer {
+    background: linear-gradient(135deg, #3182ce, #2c5282) !important;
+}
+
+.role-demo {
+    background: linear-gradient(135deg, #805ad5, #6b46c1) !important;
 }

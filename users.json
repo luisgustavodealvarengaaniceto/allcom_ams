@@ -1,0 +1,45 @@
+{
+  "users": {
+    "admin": {
+      "password": "AllC0m@dm1n2025!",
+      "name": "Administrador",
+      "role": "admin",
+      "permissions": ["read", "write", "admin"],
+      "lastLogin": null,
+      "email": "admin@allcom.com",
+      "active": true
+    },
+    "tecnico": {
+      "password": "T3cn1c0@2025!",
+      "name": "Técnico Especialista",
+      "role": "technician",
+      "permissions": ["read", "write"],
+      "lastLogin": null,
+      "email": "tecnico@allcom.com",
+      "active": true
+    },
+    "consultor": {
+      "password": "C0nsult0r@2025!",
+      "name": "Consultor de Vendas",
+      "role": "viewer",
+      "permissions": ["read"],
+      "lastLogin": null,
+      "email": "consultor@allcom.com",
+      "active": true
+    },
+    "gerente": {
+      "password": "G3r3nt3@2025!",
+      "name": "Gerente de Operações",
+      "role": "manager",
+      "permissions": ["read", "write", "reports"],
+      "lastLogin": null,
+      "email": "gerente@allcom.com",
+      "active": true
+    }
+  },
+  "config": {
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 300,
+    "passwordMinLength": 6
+  }
+}
