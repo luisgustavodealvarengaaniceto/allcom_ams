@@ -17,11 +17,6 @@
       "dest": "/$1"
     }
   ],
-  "functions": {
-    "api/proxy.js": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
