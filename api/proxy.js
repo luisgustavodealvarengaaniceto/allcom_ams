@@ -1,6 +1,5 @@
-const fetch = require('node-fetch');
-
-module.exports = async (req, res) => {
+// Vercel Serverless Function - Proxy para API JimiCloud
+export default async function handler(req, res) {
     // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -40,8 +39,7 @@ module.exports = async (req, res) => {
             },
             body: JSON.stringify({
                 imeis: imeis
-            }),
-            timeout: 30000
+            })
         });
 
         if (!response.ok) {
@@ -64,4 +62,4 @@ module.exports = async (req, res) => {
             res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
         }
     }
-};
+}
