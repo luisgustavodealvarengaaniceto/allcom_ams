@@ -134,12 +134,12 @@
                         <textarea 
                             id="imeiInput" 
                             class="imei-textarea" 
-                            placeholder="Digite os IMEIs, um por linha. Exemplo:&#10;869247060051882&#10;868120302622664&#10;868120302622665&#10;&#10;💡 Você pode inserir quantos IMEIs precisar!&#10;O sistema processa automaticamente em lotes de 100."
+                            placeholder="Digite os IMEIs, um por linha. Exemplo:&#10;869247060051882&#10;868120302622664&#10;868120302622665&#10;&#10;💡 Você pode inserir quantos IMEIs precisar!&#10;O sistema processa automaticamente em lotes."
                             rows="10"
                         ></textarea>
                         <div class="input-helper">
                             <span class="imei-count">0 IMEIs inseridos</span>
-                            <span class="batch-info">Processamento automático em lotes de 100</span>
+                            <span class="batch-info">Processamento automático em lotes</span>
                         </div>
                     </div>
 
@@ -151,6 +151,10 @@
                         <button id="limparBtn" class="btn btn-secondary">
                             <i class="fas fa-trash"></i>
                             Limpar Lista
+                        </button>
+                        <button id="reportBtn" class="btn btn-info" onclick="showProcessingReport()" style="display: none;">
+                            <i class="fas fa-chart-bar"></i>
+                            Relatório
                         </button>
                     </div>
                 </div>

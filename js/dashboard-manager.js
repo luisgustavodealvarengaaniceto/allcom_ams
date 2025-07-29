@@ -5,10 +5,10 @@ class DashboardManager {
             total: 0,
             online: 0,
             offline: 0,
-            criticalBattery: 0,
             firmwareVersions: {},
             lastUpdate: null
         };
+        this.firmwareDevices = {};
     }
 
     // Calcular métricas dos dispositivos
@@ -17,7 +17,6 @@ class DashboardManager {
             total: devices.length,
             online: devices.filter(d => d.isOnline).length,
             offline: devices.filter(d => !d.isOnline).length,
-            criticalBattery: devices.filter(d => this.isCriticalBattery(d)).length,
             firmwareVersions: this.groupByFirmware(devices),
             lastUpdate: new Date().toLocaleString('pt-BR'),
             avgOfflineDays: this.calculateAvgOfflineDays(devices),
@@ -26,12 +25,6 @@ class DashboardManager {
 
         this.updateDashboard();
         return this.metrics;
-    }
-
-    // Verificar bateria crítica
-    isCriticalBattery(device) {
-        const power = parseFloat(device.power || device.systemInfo?.power);
-        return power && power < 24; // Menor que 24V
     }
 
     // Verificar problemas de armazenamento
@@ -54,10 +47,24 @@ class DashboardManager {
     // Agrupar por versão de firmware
     groupByFirmware(devices) {
         const versions = {};
+        const versionDevices = {};
+        
         devices.forEach(device => {
             const version = device.firmwareVersion || 'Desconhecida';
             versions[version] = (versions[version] || 0) + 1;
+            
+            if (!versionDevices[version]) {
+                versionDevices[version] = [];
+            }
+            versionDevices[version].push(device);
         });
+        
+        // Armazenar dados detalhados para uso posterior
+        this.firmwareDevices = versionDevices;
+        
+        // Debug: verificar se os dados foram armazenados corretamente
+        console.log('📊 Firmware devices armazenados:', Object.keys(this.firmwareDevices));
+        
         return versions;
     }
 
@@ -113,15 +120,6 @@ class DashboardManager {
                         </div>
                     </div>
                     
-                    <div class="metric-card warning">
-                        <div class="metric-icon"><i class="fas fa-battery-quarter"></i></div>
-                        <div class="metric-content">
-                            <div class="metric-value" id="criticalBattery">${this.metrics.criticalBattery}</div>
-                            <div class="metric-label">Bateria Crítica</div>
-                            <div class="metric-note">< 24V</div>
-                        </div>
-                    </div>
-                    
                     <div class="metric-card info">
                         <div class="metric-icon"><i class="fas fa-clock"></i></div>
                         <div class="metric-content">
@@ -173,7 +171,6 @@ class DashboardManager {
             'totalDevices': this.metrics.total,
             'onlineDevices': this.metrics.online,
             'offlineDevices': this.metrics.offline,
-            'criticalBattery': this.metrics.criticalBattery,
             'avgOfflineDays': this.metrics.avgOfflineDays,
             'storageIssues': this.metrics.storageIssues,
             'lastUpdate': this.metrics.lastUpdate
@@ -251,16 +248,27 @@ class DashboardManager {
         const firmwareHTML = Object.entries(this.metrics.firmwareVersions)
             .sort(([,a], [,b]) => b - a)
             .map(([version, count]) => `
-                <div class="firmware-item">
+                <div class="firmware-item clickable" data-firmware-version="${version}">
                     <div class="firmware-version">${version}</div>
                     <div class="firmware-count">${count} equipamentos</div>
                     <div class="firmware-bar">
                         <div class="firmware-fill" style="width: ${this.getPercentage(count, this.metrics.total)}%"></div>
                     </div>
+                    <div class="firmware-click-hint">
+                        <i class="fas fa-mouse-pointer"></i> Clique para ver IMEIs
+                    </div>
                 </div>
             `).join('');
 
         container.innerHTML = firmwareHTML;
+        
+        // Adicionar event listeners para cada item
+        container.querySelectorAll('.firmware-item.clickable').forEach(item => {
+            item.addEventListener('click', () => {
+                const version = item.getAttribute('data-firmware-version');
+                this.showFirmwareDetails(version);
+            });
+        });
     }
 
     // Calcular percentual
@@ -279,7 +287,8 @@ class DashboardManager {
     // Gerar métricas de firmware com comparação
     generateFirmwareMetrics(devices, firmwareManager = null) {
         if (!firmwareManager || !firmwareManager.getReferenceFirmware()) {
-            return this.generateFirmwareChart(devices);
+            // Fallback para funcionalidade básica de firmware
+            return this.generateBasicFirmwareChart(devices);
         }
 
         const analysis = firmwareManager.analyzeFirmwareDistribution(devices);
@@ -366,6 +375,38 @@ class DashboardManager {
         return html;
     }
 
+    // Gerar gráfico básico de firmware (fallback)
+    generateBasicFirmwareChart(devices) {
+        const firmwareVersions = this.groupByFirmware(devices);
+        
+        let html = '<div class="firmware-basic-chart">';
+        html += '<h3>Distribuição de Firmware</h3>';
+        html += '<div class="firmware-list">';
+        
+        Object.entries(firmwareVersions)
+            .sort(([,a], [,b]) => b - a)
+            .forEach(([version, count]) => {
+                const percentage = this.getPercentage(count, devices.length);
+                html += `
+                    <div class="firmware-item clickable" data-firmware-version="${version}">
+                        <div class="firmware-version">${version}</div>
+                        <div class="firmware-count">${count} equipamentos (${percentage}%)</div>
+                        <div class="firmware-bar">
+                            <div class="firmware-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="firmware-click-hint">
+                            <i class="fas fa-mouse-pointer"></i> Clique para ver IMEIs
+                        </div>
+                    </div>
+                `;
+            });
+        
+        html += '</div>';
+        html += '</div>';
+        
+        return html;
+    }
+
     // Integrar análise de firmware no dashboard principal
     generateGeneralMetricsWithFirmware(devices, firmwareManager = null) {
         this.calculateMetrics(devices);
@@ -432,14 +473,6 @@ class DashboardManager {
 
         // Outras métricas
         html += `
-            <div class="metric-card battery">
-                <div class="metric-icon"><i class="fas fa-battery-quarter"></i></div>
-                <div class="metric-content">
-                    <div class="metric-number">${this.metrics.criticalBattery}</div>
-                    <div class="metric-label">Bateria Crítica</div>
-                </div>
-            </div>
-            
             <div class="metric-card storage">
                 <div class="metric-icon"><i class="fas fa-hdd"></i></div>
                 <div class="metric-content">
@@ -453,6 +486,146 @@ class DashboardManager {
         html += `<div class="dashboard-last-update">Última atualização: ${this.metrics.lastUpdate}</div>`;
         
         return html;
+    }
+
+    // Mostrar detalhes dos equipamentos de uma versão específica de firmware
+    showFirmwareDetails(firmwareVersion) {
+        // Verificar se firmwareDevices existe e tem dados
+        if (!this.firmwareDevices || !this.firmwareDevices[firmwareVersion]) {
+            showToast('Nenhum equipamento encontrado para esta versão', 'error');
+            console.error('firmwareDevices não inicializado ou versão não encontrada:', firmwareVersion);
+            return;
+        }
+
+        const devices = this.firmwareDevices[firmwareVersion];
+        if (!devices || devices.length === 0) {
+            showToast('Nenhum equipamento encontrado para esta versão', 'error');
+            return;
+        }
+
+        // Criar conteúdo do modal
+        const modalContent = `
+            <div class="firmware-modal">
+                <div class="firmware-modal-header">
+                    <h3>Equipamentos com Firmware: ${firmwareVersion}</h3>
+                    <span class="firmware-count-badge">${devices.length} equipamentos</span>
+                </div>
+                
+                <div class="firmware-devices-grid">
+                    ${devices.map(device => `
+                        <div class="firmware-device-card ${device.isOnline ? 'online' : 'offline'}" 
+                             onclick="showDeviceDetails('${device.imei}')">
+                            <div class="device-imei">
+                                <strong>${device.imei}</strong>
+                                <span class="device-status ${device.isOnline ? 'online' : 'offline'}">
+                                    <i class="fas fa-circle"></i>
+                                    ${device.isOnline ? 'Online' : 'Offline'}
+                                </span>
+                            </div>
+                            <div class="device-info">
+                                <div class="device-last-seen">
+                                    <i class="fas fa-clock"></i>
+                                    ${device.lastTimeBrasilia || 'N/A'}
+                                </div>
+                                ${!device.isOnline ? `
+                                    <div class="device-offline-days">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        ${device.offlineDays || 0} dias offline
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="device-actions">
+                                <i class="fas fa-info-circle"></i>
+                                Clique para mais detalhes
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="firmware-modal-footer">
+                    <button class="btn btn-export" onclick="dashboardManager.exportFirmwareDevices('${firmwareVersion}')">
+                        <i class="fas fa-download"></i> Exportar Lista
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeFirmwareModal()">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Criar e mostrar modal
+        this.createFirmwareModal(modalContent);
+    }
+
+    // Criar modal para firmware
+    createFirmwareModal(content) {
+        // Remover modal existente se houver
+        const existingModal = document.getElementById('firmwareModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Criar novo modal
+        const modal = document.createElement('div');
+        modal.id = 'firmwareModal';
+        modal.className = 'firmware-modal-overlay';
+        modal.innerHTML = `
+            <div class="firmware-modal-content">
+                ${content}
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        
+        // Mostrar modal com animação
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+
+        // Fechar modal ao clicar no overlay
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeFirmwareModal();
+            }
+        });
+    }
+
+    // Fechar modal de firmware
+    closeFirmwareModal() {
+        const modal = document.getElementById('firmwareModal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+
+    // Exportar lista de dispositivos de uma versão específica
+    exportFirmwareDevices(firmwareVersion) {
+        const devices = this.firmwareDevices[firmwareVersion];
+        if (!devices || devices.length === 0) {
+            showToast('Nenhum equipamento para exportar', 'error');
+            return;
+        }
+
+        // Usar o ExportManager se disponível
+        if (typeof exportManager !== 'undefined') {
+            const filename = `firmware_${firmwareVersion.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}`;
+            exportManager.exportToCSV(devices, filename);
+            showToast(`Lista exportada: ${filename}.csv`, 'success');
+        } else {
+            // Fallback simples
+            const csvContent = devices.map(d => `${d.imei},${d.isOnline ? 'Online' : 'Offline'},${d.firmwareVersion},${d.lastTimeBrasilia}`).join('\n');
+            const blob = new Blob([`IMEI,Status,Firmware,Última Comunicação\n${csvContent}`], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `firmware_${firmwareVersion}_devices.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Lista exportada com sucesso', 'success');
+        }
     }
 }
 

@@ -36,7 +36,13 @@ class ExportManager {
             'Canal 4',
             'Servidor',
             'Firmware Comparação',
-            'Prioridade Atualização'
+            'Prioridade Atualização',
+            'URLTYPE',
+            'WAKEMODE',
+            'APN',
+            'SERVER (SelfCheck)',
+            'DMSSW,1,0',
+            'DMSSW,2,0'
         ];
 
         const csvData = devices.map(device => [
@@ -69,7 +75,13 @@ class ExportManager {
             this.getChannelStatus(device.systemInfo?.channels, 4),
             this.cleanText(device.server || 'N/A'),
             this.getFirmwareComparisonText(device.firmwareComparison),
-            this.getFirmwarePriority(device.firmwareComparison)
+            this.getFirmwarePriority(device.firmwareComparison),
+            this.extractURLTYPE(device),
+            this.extractWAKEMODE(device),
+            this.extractAPN(device),
+            this.extractSERVER(device),
+            this.extractDMSSW1(device),
+            this.extractDMSSW2(device)
         ]);
 
         const csvContent = [headers, ...csvData]
@@ -121,7 +133,13 @@ class ExportManager {
             'Canal 4': this.getChannelStatus(device.systemInfo?.channels, 4),
             'Servidor': device.server || 'N/A',
             'Firmware Comparação': this.getFirmwareComparisonText(device.firmwareComparison),
-            'Prioridade Atualização': this.getFirmwarePriority(device.firmwareComparison)
+            'Prioridade Atualização': this.getFirmwarePriority(device.firmwareComparison),
+            'URLTYPE': this.extractURLTYPE(device),
+            'WAKEMODE': this.extractWAKEMODE(device),
+            'APN': this.extractAPN(device),
+            'SERVER (SelfCheck)': this.extractSERVER(device),
+            'DMSSW,1,0': this.extractDMSSW1(device),
+            'DMSSW,2,0': this.extractDMSSW2(device)
         }));
 
         const mainSheet = XLSX.utils.json_to_sheet(mainData);
@@ -160,7 +178,6 @@ class ExportManager {
                 total: devices.length,
                 online: devices.filter(d => d.isOnline).length,
                 offline: devices.filter(d => !d.isOnline).length,
-                critical_battery: devices.filter(d => this.isCriticalBattery(d)).length,
                 avg_offline_days: this.calculateAverageOfflineDays(devices),
                 firmware_distribution: this.getFirmwareDistribution(devices)
             },
@@ -195,6 +212,14 @@ class ExportManager {
                     comparison: device.firmwareComparison,
                     comparison_text: this.getFirmwareComparisonText(device.firmwareComparison),
                     update_priority: this.getFirmwarePriority(device.firmwareComparison)
+                },
+                additional_params: {
+                    urltype: this.extractURLTYPE(device),
+                    wakemode: this.extractWAKEMODE(device),
+                    apn: this.extractAPN(device),
+                    server_selfcheck: this.extractSERVER(device),
+                    dmssw_1_0: this.extractDMSSW1(device),
+                    dmssw_2_0: this.extractDMSSW2(device)
                 },
                 raw_data: {
                     log: device.log,
@@ -259,6 +284,215 @@ class ExportManager {
 
     extractTemperatureNumber(device) {
         return device.systemInfo?.cpuTemp || null;
+    }
+
+    // Extrair URLTYPE do selfCheckParam
+    extractURLTYPE(device) {
+        // Buscar em múltiplos campos e formatos
+        const sources = [
+            device.selfCheckParam,
+            device.parsedSelfCheck?.URLTYPE,
+            device.log
+        ];
+
+        for (const source of sources) {
+            if (!source) continue;
+            
+            // Buscar diferentes padrões (incluindo erro de digitação comum URLTPYE)
+            const patterns = [
+                /URLTYPE:([^;,\s]+)/i,
+                /URLTPYE:([^;,\s]+)/i,  // Erro de digitação comum na API
+                /urltype[:\s=]+([^;,\s]+)/i,
+                /urltpye[:\s=]+([^;,\s]+)/i,  // Erro de digitação em minúsculo
+                /"urltype"[:\s]*([^;,\s"]+)/i,
+                /"urltpye"[:\s]*([^;,\s"]+)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = String(source).match(pattern);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+        }
+        
+        return 'Não encontrado';
+    }
+
+    // Extrair WAKEMODE do selfCheckParam
+    extractWAKEMODE(device) {
+        // Buscar em múltiplos campos e formatos
+        const sources = [
+            device.selfCheckParam,
+            device.parsedSelfCheck?.WAKEMODE,
+            device.log
+        ];
+
+        for (const source of sources) {
+            if (!source) continue;
+            
+            // Buscar diferentes padrões (incluindo possíveis erros de digitação)
+            const patterns = [
+                /WAKEMODE:([^;,\s]+)/i,
+                /WAKMODE:([^;,\s]+)/i,  // Possível erro de digitação
+                /wakemode[:\s=]+([^;,\s]+)/i,
+                /wakmode[:\s=]+([^;,\s]+)/i,
+                /"wakemode"[:\s]*([^;,\s"]+)/i,
+                /"wakmode"[:\s]*([^;,\s"]+)/i,
+                /wake[_\s]*mode[:\s=]+([^;,\s]+)/i,
+                /wak[_\s]*mode[:\s=]+([^;,\s]+)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = String(source).match(pattern);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+        }
+        
+        return 'Não encontrado';
+    }
+
+    // Extrair APN do selfCheckParam
+    extractAPN(device) {
+        // Buscar em múltiplos campos e formatos
+        const sources = [
+            device.selfCheckParam,
+            device.parsedSelfCheck?.APN,
+            device.log
+        ];
+
+        for (const source of sources) {
+            if (!source) continue;
+            
+            // Buscar diferentes padrões
+            const patterns = [
+                /APN:([^;,]+)/i,
+                /apn[:\s=]+([^;,]+)/i,
+                /"apn"[:\s]*([^;,"]+)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = String(source).match(pattern);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+        }
+        
+        return 'Não encontrado';
+    }
+
+    // Extrair SERVER do selfCheckParam
+    extractSERVER(device) {
+        // Buscar em múltiplos campos e formatos
+        const sources = [
+            device.selfCheckParam,
+            device.parsedSelfCheck?.SERVER,
+            device.server,
+            device.log
+        ];
+
+        for (const source of sources) {
+            if (!source) continue;
+            
+            // Buscar diferentes padrões (incluindo possíveis erros de digitação)
+            const patterns = [
+                /SERVER:([^;,]+)/i,
+                /SEVER:([^;,]+)/i,   // Possível erro de digitação
+                /SERVR:([^;,]+)/i,   // Possível erro de digitação
+                /server[:\s=]+([^;,]+)/i,
+                /sever[:\s=]+([^;,]+)/i,
+                /servr[:\s=]+([^;,]+)/i,
+                /"server"[:\s]*([^;,"]+)/i,
+                /"sever"[:\s]*([^;,"]+)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = String(source).match(pattern);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+        }
+        
+        // Se não encontrou nos padrões, retornar o campo server direto se existir
+        if (device.server) {
+            return device.server;
+        }
+        
+        return 'Não encontrado';
+    }
+
+    // Extrair DMS do log (formato: DMS:1/1/NA - pegar apenas os dois primeiros valores)
+    extractDMSSW1(device) {
+        // Buscar em múltiplos campos
+        const sources = [
+            device.log,
+            device.selfCheckParam,
+            JSON.stringify(device)
+        ];
+
+        for (const source of sources) {
+            if (!source) continue;
+            
+            // Buscar diferentes padrões
+            const patterns = [
+                /DMS:([^,\s;]+)/i,
+                /dms[:\s=]+([^,\s;]+)/i,
+                /"dms"[:\s]*"?([^,\s;"]+)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = String(source).match(pattern);
+                if (match && match[1]) {
+                    const dmsParts = match[1].split('/');
+                    if (dmsParts.length >= 2) {
+                        return `${dmsParts[0]}/${dmsParts[1]}`;
+                    } else if (dmsParts.length === 1) {
+                        return dmsParts[0];
+                    }
+                }
+            }
+        }
+        
+        return 'Não encontrado';
+    }
+
+    // Extrair ADAS do log (formato: ADAS:1/0/320/271/NA/true - pegar apenas os dois primeiros valores)
+    extractDMSSW2(device) {
+        // Buscar em múltiplos campos
+        const sources = [
+            device.log,
+            device.selfCheckParam,
+            JSON.stringify(device)
+        ];
+
+        for (const source of sources) {
+            if (!source) continue;
+            
+            // Buscar diferentes padrões
+            const patterns = [
+                /ADAS:([^,\s;]+)/i,
+                /adas[:\s=]+([^,\s;]+)/i,
+                /"adas"[:\s]*"?([^,\s;"]+)/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = String(source).match(pattern);
+                if (match && match[1]) {
+                    const adasParts = match[1].split('/');
+                    if (adasParts.length >= 2) {
+                        return `${adasParts[0]}/${adasParts[1]}`;
+                    } else if (adasParts.length === 1) {
+                        return adasParts[0];
+                    }
+                }
+            }
+        }
+        
+        return 'Não encontrado';
     }
 
     // Obter status do cartão SD
@@ -366,12 +600,6 @@ class ExportManager {
         }
     }
 
-    // Verificar se bateria está crítica
-    isCriticalBattery(device) {
-        const voltage = this.extractVoltageNumber(device);
-        return voltage && voltage < 11.5;
-    }
-
     // Calcular média de dias offline
     calculateAverageOfflineDays(devices) {
         const offlineDevices = devices.filter(d => !d.isOnline);
@@ -400,7 +628,6 @@ class ExportManager {
         const totalDevices = devices.length;
         const onlineDevices = devices.filter(d => d.isOnline).length;
         const offlineDevices = devices.filter(d => !d.isOnline).length;
-        const criticalBatteryDevices = devices.filter(d => this.isCriticalBattery(d)).length;
         const avgOfflineDays = this.calculateAverageOfflineDays(devices);
         
         return [
@@ -408,7 +635,6 @@ class ExportManager {
             { 'Métrica': 'Equipamentos Online', 'Valor': onlineDevices },
             { 'Métrica': 'Equipamentos Offline', 'Valor': offlineDevices },
             { 'Métrica': 'Taxa Online (%)', 'Valor': totalDevices > 0 ? Math.round((onlineDevices / totalDevices) * 100) : 0 },
-            { 'Métrica': 'Bateria Crítica', 'Valor': criticalBatteryDevices },
             { 'Métrica': 'Média Dias Offline', 'Valor': avgOfflineDays },
             { 'Métrica': 'Data da Exportação', 'Valor': new Date().toLocaleString('pt-BR') }
         ];
@@ -419,16 +645,6 @@ class ExportManager {
         const issues = [];
 
         devices.forEach(device => {
-            // Bateria crítica
-            if (this.isCriticalBattery(device)) {
-                issues.push({
-                    'IMEI': device.imei,
-                    'Problema': 'Bateria Crítica',
-                    'Detalhes': `Voltagem: ${this.extractVoltage(device)}`,
-                    'Severidade': 'Alta'
-                });
-            }
-
             // Offline por muito tempo
             if (!device.isOnline && device.offlineDays > 7) {
                 issues.push({

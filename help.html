@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajuda e Documentação - Allcom JC450</title>
+    <meta name="description" content="Documentação completa do sistema Allcom JC450 para consulta de status de equipamentos">
+    <meta name="author" content="Allcom">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -17,8 +19,8 @@
                     <i class="fas fa-book-open"></i>
                     <h1>Documentação Allcom JC450</h1>
                 </div>
-                <p class="subtitle">Sistema Profissional de Consulta de Status de Equipamentos</p>
-                <div class="header-buttons">
+                <p class="subtitle">Sistema de Consulta de Status de Equipamentos - Guia Completo</p>
+                <div class="header-actions">
                     <a href="index.html" class="btn btn-primary">
                         <i class="fas fa-arrow-left"></i>
                         Voltar ao Sistema
@@ -40,23 +42,17 @@
                 <a href="#guia-uso" class="nav-item" onclick="showSection('guia-uso')">
                     <i class="fas fa-play"></i> Guia de Uso
                 </a>
-                <a href="#funcionalidades" class="nav-item" onclick="showSection('funcionalidades')">
-                    <i class="fas fa-cogs"></i> Funcionalidades
-                </a>
                 <a href="#firmware" class="nav-item" onclick="showSection('firmware')">
                     <i class="fas fa-microchip"></i> Firmware
-                </a>
-                <a href="#exportacao" class="nav-item" onclick="showSection('exportacao')">
-                    <i class="fas fa-download"></i> Exportação
                 </a>
                 <a href="#dashboard" class="nav-item" onclick="showSection('dashboard')">
                     <i class="fas fa-chart-line"></i> Dashboard
                 </a>
-                <a href="#solucao-problemas" class="nav-item" onclick="showSection('solucao-problemas')">
-                    <i class="fas fa-tools"></i> Problemas
+                <a href="#exportacao" class="nav-item" onclick="showSection('exportacao')">
+                    <i class="fas fa-download"></i> Exportação
                 </a>
-                <a href="#api" class="nav-item" onclick="showSection('api')">
-                    <i class="fas fa-code"></i> API
+                <a href="#troubleshooting" class="nav-item" onclick="showSection('troubleshooting')">
+                    <i class="fas fa-tools"></i> Problemas
                 </a>
             </div>
         </nav>
@@ -75,7 +71,7 @@
                                     <i class="fas fa-search"></i>
                                 </div>
                                 <h3>Consulta de Status</h3>
-                                <p>Consulte o status de equipamentos Allcom JC450 via IMEI, com informações detalhadas de firmware, conectividade e dados técnicos.</p>
+                                <p>Consulte o status de equipamentos Allcom JC450 via IMEI, com informações detalhadas de firmware, conectividade e última comunicação.</p>
                             </div>
                             <div class="overview-card">
                                 <div class="overview-icon">
@@ -89,14 +85,14 @@
                                     <i class="fas fa-microchip"></i>
                                 </div>
                                 <h3>Gestão de Firmware</h3>
-                                <p>Compare versões de firmware, defina referências e identifique equipamentos que precisam de atualização.</p>
+                                <p>Configure firmware de referência, visualize distribuição por versão e identifique equipamentos que precisam de atualização.</p>
                             </div>
                             <div class="overview-card">
                                 <div class="overview-icon">
                                     <i class="fas fa-file-export"></i>
                                 </div>
                                 <h3>Exportação Avançada</h3>
-                                <p>Exporte dados em formato CSV, Excel ou JSON com formatação profissional e campos organizados.</p>
+                                <p>Exporte dados em formato CSV, Excel ou JSON com formatação profissional e campos organizados para análise.</p>
                             </div>
                         </div>
 
@@ -104,7 +100,7 @@
                             <h3><i class="fas fa-info-circle"></i> Especificações do Sistema</h3>
                             <div class="specs-grid">
                                 <div class="spec-item">
-                                    <strong>Capacidade:</strong> Ilimitado (lotes de 100 IMEIs)
+                                    <strong>Processamento:</strong> Automático em lotes de 99 IMEIs
                                 </div>
                                 <div class="spec-item">
                                     <strong>Formatos Suportados:</strong> .txt, .csv para importação
@@ -117,9 +113,6 @@
                                 </div>
                                 <div class="spec-item">
                                     <strong>Timezone:</strong> Conversão automática China → Brasil
-                                </div>
-                                <div class="spec-item">
-                                    <strong>Cache:</strong> Sistema inteligente com performance otimizada
                                 </div>
                             </div>
                         </div>
@@ -138,28 +131,37 @@
                             <div class="step">
                                 <div class="step-number">1</div>
                                 <div class="step-content">
-                                    <h3>Inserir IMEIs</h3>
-                                    <p>Digite os IMEIs na caixa de texto (um por linha) ou carregue um arquivo .txt/.csv clicando em "Carregar arquivo .txt".</p>
-                                    <div class="step-example">
-                                        <strong>Exemplo:</strong>
-                                        <code>869247060051882<br>868120302622664<br>868120302622665</code>
-                                    </div>
+                                    <h3>Configurar Firmware de Referência</h3>
+                                    <p>Antes de consultar, configure o firmware de referência no dropdown. Isso permite comparar as versões dos equipamentos.</p>
+                                    <ul>
+                                        <li>Selecione uma versão existente</li>
+                                        <li>Ou adicione uma nova versão clicando em "Adicionar novo firmware"</li>
+                                        <li>Formato: C450pro_2.0.16_20250526</li>
+                                    </ul>
                                 </div>
                             </div>
 
                             <div class="step">
                                 <div class="step-number">2</div>
                                 <div class="step-content">
-                                    <h3>Validação Automática</h3>
-                                    <p>O sistema valida automaticamente cada IMEI (deve ter exatamente 15 dígitos numéricos). IMEIs inválidos são destacados em vermelho.</p>
+                                    <h3>Inserir IMEIs</h3>
+                                    <p>Digite os IMEIs na caixa de texto (um por linha) ou carregue um arquivo .txt/.csv.</p>
+                                    <div class="step-example">
+                                        <strong>Exemplo:</strong>
+                                        <code>869247060051882<br>868120302622664<br>868120302622665</code>
+                                    </div>
+                                    <div class="tip-box">
+                                        <i class="fas fa-lightbulb"></i>
+                                        <strong>Dica:</strong> Você pode inserir quantos IMEIs precisar. O sistema processa automaticamente em lotes.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="step">
                                 <div class="step-number">3</div>
                                 <div class="step-content">
-                                    <h3>Configurar Firmware de Referência</h3>
-                                    <p>Selecione ou defina um firmware de referência no dropdown para comparação automática. Isso permitirá identificar equipamentos desatualizados.</p>
+                                    <h3>Validação Automática</h3>
+                                    <p>O sistema valida automaticamente cada IMEI (15 dígitos numéricos). IMEIs inválidos são destacados e não processados.</p>
                                 </div>
                             </div>
 
@@ -167,7 +169,7 @@
                                 <div class="step-number">4</div>
                                 <div class="step-content">
                                     <h3>Iniciar Consulta</h3>
-                                    <p>Clique em "Consultar Status" para iniciar o processamento. Para listas grandes, o sistema divide automaticamente em lotes de 100 IMEIs.</p>
+                                    <p>Clique em "Consultar Status" para iniciar o processamento. O sistema divide automaticamente em lotes de 99 IMEIs.</p>
                                 </div>
                             </div>
 
@@ -175,7 +177,12 @@
                                 <div class="step-number">5</div>
                                 <div class="step-content">
                                     <h3>Acompanhar Progresso</h3>
-                                    <p>Observe a barra de progresso detalhada que mostra o status atual: processando, sucesso, erros e progress geral.</p>
+                                    <p>Observe a barra de progresso detalhada que mostra:</p>
+                                    <ul>
+                                        <li>Status atual do processamento</li>
+                                        <li>Porcentagem de conclusão</li>
+                                        <li>Número de lotes processados</li>
+                                    </ul>
                                 </div>
                             </div>
 
@@ -183,96 +190,27 @@
                                 <div class="step-number">6</div>
                                 <div class="step-content">
                                     <h3>Analisar Resultados</h3>
-                                    <p>Visualize os resultados na lista de equipamentos. Use filtros para exibir apenas Online/Offline e busque por IMEI específico.</p>
+                                    <p>Visualize os resultados na lista de equipamentos com:</p>
+                                    <ul>
+                                        <li>Status de conectividade (Online/Offline)</li>
+                                        <li>Versão do firmware</li>
+                                        <li>Última comunicação</li>
+                                        <li>Dias offline (se aplicável)</li>
+                                    </ul>
                                 </div>
                             </div>
 
                             <div class="step">
                                 <div class="step-number">7</div>
                                 <div class="step-content">
-                                    <h3>Ver Detalhes e Exportar</h3>
-                                    <p>Clique em qualquer equipamento para ver detalhes completos. Use os botões de exportação para gerar relatórios em CSV, Excel ou JSON.</p>
+                                    <h3>Usar Filtros e Busca</h3>
+                                    <p>Utilize os filtros para refinar a visualização:</p>
+                                    <ul>
+                                        <li>Filtro por status: Todos/Online/Offline</li>
+                                        <li>Busca por IMEI específico</li>
+                                        <li>Clique em qualquer equipamento para detalhes completos</li>
+                                    </ul>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Seção: Funcionalidades -->
-            <section id="funcionalidades" class="help-section">
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-cogs"></i> Funcionalidades Detalhadas</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="feature-grid">
-                            <div class="feature-card">
-                                <h3><i class="fas fa-list"></i> Processamento em Lote</h3>
-                                <ul>
-                                    <li>Suporte ilimitado de IMEIs</li>
-                                    <li>Divisão automática em lotes de 100</li>
-                                    <li>Processamento paralelo otimizado</li>
-                                    <li>Retry automático em caso de falha</li>
-                                    <li>Circuit breaker para proteção da API</li>
-                                </ul>
-                            </div>
-
-                            <div class="feature-card">
-                                <h3><i class="fas fa-filter"></i> Filtros e Busca</h3>
-                                <ul>
-                                    <li>Filtro por status: Todos/Online/Offline</li>
-                                    <li>Busca rápida por IMEI</li>
-                                    <li>Ordenação inteligente por status</li>
-                                    <li>Destaque visual de equipamentos críticos</li>
-                                    <li>Contadores em tempo real</li>
-                                </ul>
-                            </div>
-
-                            <div class="feature-card">
-                                <h3><i class="fas fa-info-circle"></i> Informações Técnicas</h3>
-                                <ul>
-                                    <li>Versão de firmware completa</li>
-                                    <li>Status de conectividade (Online/Offline)</li>
-                                    <li>Última comunicação (horário Brasil)</li>
-                                    <li>Dias offline calculados automaticamente</li>
-                                    <li>Dados técnicos: voltagem, sinal, temperatura</li>
-                                    <li>Informações de armazenamento (SD cards)</li>
-                                    <li>Status dos canais de comunicação</li>
-                                </ul>
-                            </div>
-
-                            <div class="feature-card">
-                                <h3><i class="fas fa-mobile-alt"></i> Interface Responsiva</h3>
-                                <ul>
-                                    <li>Design adaptativo para mobile/tablet/desktop</li>
-                                    <li>Navegação touch-friendly</li>
-                                    <li>Modais otimizados para telas pequenas</li>
-                                    <li>Gráficos responsivos</li>
-                                    <li>Tipografia otimizada</li>
-                                </ul>
-                            </div>
-
-                            <div class="feature-card">
-                                <h3><i class="fas fa-rocket"></i> Performance</h3>
-                                <ul>
-                                    <li>Cache inteligente de tokens e resultados</li>
-                                    <li>Lazy loading de componentes</li>
-                                    <li>Debounce em filtros e busca</li>
-                                    <li>Monitoramento de performance</li>
-                                    <li>Otimização de renderização</li>
-                                </ul>
-                            </div>
-
-                            <div class="feature-card">
-                                <h3><i class="fas fa-bell"></i> Notificações</h3>
-                                <ul>
-                                    <li>Toast notifications para feedback</li>
-                                    <li>Alertas de erro detalhados</li>
-                                    <li>Confirmações de sucesso</li>
-                                    <li>Progress indicators visuais</li>
-                                    <li>Alertas de equipamentos críticos</li>
-                                </ul>
                             </div>
                         </div>
                     </div>
@@ -283,194 +221,62 @@
             <section id="firmware" class="help-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2><i class="fas fa-microchip"></i> Sistema de Gestão de Firmware</h2>
+                        <h2><i class="fas fa-microchip"></i> Gestão de Firmware</h2>
                     </div>
                     <div class="card-body">
-                        <div class="firmware-info">
-                            <div class="firmware-card">
-                                <h3><i class="fas fa-cog"></i> Configuração de Firmware de Referência</h3>
-                                <p>Defina um firmware de referência para comparação automática com todos os equipamentos consultados.</p>
-                                <div class="firmware-steps">
-                                    <ol>
-                                        <li>Selecione um firmware predefinido no dropdown</li>
-                                        <li>Ou adicione um firmware customizado</li>
-                                        <li>O sistema comparará automaticamente todos os equipamentos</li>
-                                        <li>Equipamentos desatualizados serão destacados</li>
-                                    </ol>
-                                </div>
-                            </div>
-
-                            <div class="firmware-card">
-                                <h3><i class="fas fa-search"></i> Análise de Firmware</h3>
-                                <div class="firmware-analysis">
-                                    <div class="analysis-item">
-                                        <strong>Atualizado:</strong> Firmware igual ao de referência
-                                    </div>
-                                    <div class="analysis-item">
-                                        <strong>Desatualizado:</strong> Versão anterior ao de referência
-                                    </div>
-                                    <div class="analysis-item">
-                                        <strong>Mais Recente:</strong> Versão posterior ao de referência
-                                    </div>
-                                    <div class="analysis-item">
-                                        <strong>Desconhecido:</strong> Formato não reconhecido
+                        <div class="firmware-management">
+                            <h3><i class="fas fa-cog"></i> Configuração de Firmware de Referência</h3>
+                            <p>O sistema permite configurar um firmware de referência para comparação automática com os equipamentos consultados.</p>
+                            
+                            <div class="firmware-features">
+                                <div class="feature-item">
+                                    <h4><i class="fas fa-plus"></i> Adicionar Novo Firmware</h4>
+                                    <p>Selecione "Adicionar novo firmware" no dropdown para inserir uma nova versão de referência.</p>
+                                    <div class="code-example">
+                                        <strong>Formato esperado:</strong> C450pro_2.0.16_20250526
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="firmware-card">
-                                <h3><i class="fas fa-code"></i> Formato de Firmware Suportado</h3>
-                                <div class="firmware-format">
-                                    <p><strong>Padrão:</strong> <code>C450Pro_V?[Major].[Minor].[Patch]_[YYYYMMDD ou YYMMDD]</code></p>
-                                    <div class="format-examples">
-                                        <div class="example-item">
-                                            <strong>Exemplo 1:</strong> <code>C450Pro_2.0.16_20250526</code>
-                                        </div>
-                                        <div class="example-item">
-                                            <strong>Exemplo 2:</strong> <code>C450pro_V2.0.13_250410</code>
-                                        </div>
-                                        <div class="example-item">
-                                            <strong>Exemplo 3:</strong> <code>C450Pro_2.0.08_20241028</code>
-                                        </div>
-                                    </div>
+                                
+                                <div class="feature-item">
+                                    <h4><i class="fas fa-list"></i> Versões Disponíveis</h4>
+                                    <p>O sistema mantém um histórico de versões utilizadas:</p>
+                                    <ul>
+                                        <li>C450Pro_2.0.16_20250526 (Mais Recente)</li>
+                                        <li>C450Pro_2.0.13_20250410</li>
+                                        <li>C450Pro_2.0.08_20241028</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="feature-item">
+                                    <h4><i class="fas fa-search"></i> Detecção Automática</h4>
+                                    <p>O sistema extrai automaticamente a versão do firmware dos equipamentos consultados, buscando por:</p>
+                                    <ul>
+                                        <li>Campo "version" na resposta da API</li>
+                                        <li>Parâmetro "C450" no campo "selfCheckParam"</li>
+                                        <li>Busca robusta por qualquer campo que comece com "C450"</li>
+                                    </ul>
                                 </div>
                             </div>
-
-                            <div class="firmware-card">
-                                <h3><i class="fas fa-chart-bar"></i> Relatórios de Firmware</h3>
-                                <p>O sistema gera automaticamente relatórios detalhados mostrando:</p>
-                                <ul>
-                                    <li>Distribuição de versões de firmware</li>
-                                    <li>Percentual de equipamentos atualizados</li>
-                                    <li>Lista de equipamentos que precisam atualização</li>
-                                    <li>Prioridades de atualização (Alta/Média/Baixa)</li>
-                                    <li>Análise comparativa com firmware de referência</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Seção: Exportação -->
-            <section id="exportacao" class="help-section">
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-download"></i> Sistema de Exportação de Dados</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="export-info">
-                            <div class="export-format">
-                                <h3><i class="fas fa-file-csv"></i> Exportação CSV</h3>
-                                <p>Formato ideal para planilhas e análise de dados.</p>
-                                <div class="export-features">
-                                    <h4>Campos Incluídos:</h4>
-                                    <div class="fields-grid">
-                                        <div class="field-group">
-                                            <strong>Identificação:</strong>
-                                            <ul>
-                                                <li>IMEI</li>
-                                                <li>Status (Online/Offline)</li>
-                                                <li>Servidor</li>
-                                            </ul>
-                                        </div>
-                                        <div class="field-group">
-                                            <strong>Firmware:</strong>
-                                            <ul>
-                                                <li>Versão do Firmware</li>
-                                                <li>Comparação com Referência</li>
-                                                <li>Prioridade de Atualização</li>
-                                            </ul>
-                                        </div>
-                                        <div class="field-group">
-                                            <strong>Conectividade:</strong>
-                                            <ul>
-                                                <li>Última Comunicação</li>
-                                                <li>Dias Offline</li>
-                                                <li>Qualidade do Sinal (CSQ)</li>
-                                                <li>ICCID</li>
-                                            </ul>
-                                        </div>
-                                        <div class="field-group">
-                                            <strong>Hardware:</strong>
-                                            <ul>
-                                                <li>Potência (V)</li>
-                                                <li>Temperatura CPU (°C)</li>
-                                                <li>Status Rede/GPS/ACC</li>
-                                            </ul>
-                                        </div>
-                                        <div class="field-group">
-                                            <strong>Armazenamento:</strong>
-                                            <ul>
-                                                <li>SD1: Status, Usado, Total, %</li>
-                                                <li>SD2: Status, Usado, Total, %</li>
-                                                <li>Memória Interna: Usado, Total, %</li>
-                                            </ul>
-                                        </div>
-                                        <div class="field-group">
-                                            <strong>Canais:</strong>
-                                            <ul>
-                                                <li>Canal 1 Status</li>
-                                                <li>Canal 2 Status</li>
-                                                <li>Canal 3 Status</li>
-                                                <li>Canal 4 Status</li>
-                                            </ul>
-                                        </div>
+                            
+                            <div class="firmware-dashboard">
+                                <h3><i class="fas fa-chart-bar"></i> Dashboard de Firmware</h3>
+                                <p>No dashboard, você pode visualizar a distribuição de firmware dos equipamentos consultados.</p>
+                                
+                                <div class="dashboard-features">
+                                    <div class="feature-item">
+                                        <h4><i class="fas fa-mouse-pointer"></i> Cards Clicáveis</h4>
+                                        <p>Cada card de firmware no dashboard é clicável. Ao clicar, você verá:</p>
+                                        <ul>
+                                            <li>Lista detalhada de todos os IMEIs com aquela versão</li>
+                                            <li>Status de conectividade de cada equipamento</li>
+                                            <li>Última comunicação e dias offline</li>
+                                            <li>Opção para exportar apenas os equipamentos dessa versão</li>
+                                        </ul>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="export-format">
-                                <h3><i class="fas fa-file-excel"></i> Exportação Excel</h3>
-                                <p>Formato completo com múltiplas abas e formatação profissional.</p>
-                                <div class="excel-tabs">
-                                    <div class="tab-info">
-                                        <h4>Aba "Equipamentos"</h4>
-                                        <p>Dados completos de todos os equipamentos com formatação organizada e colunas bem definidas.</p>
-                                    </div>
-                                    <div class="tab-info">
-                                        <h4>Aba "Resumo"</h4>
-                                        <p>Dashboard com métricas gerais: total de equipamentos, online/offline, problemas identificados, etc.</p>
-                                    </div>
-                                    <div class="tab-info">
-                                        <h4>Aba "Problemas"</h4>
-                                        <p>Lista detalhada de equipamentos com problemas: bateria crítica, offline prolongado, armazenamento cheio.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="export-format">
-                                <h3><i class="fas fa-file-code"></i> Exportação JSON</h3>
-                                <p>Formato estruturado para integração com outros sistemas.</p>
-                                <div class="json-structure">
-                                    <h4>Estrutura do Arquivo:</h4>
-                                    <div class="json-example">
-                                        <pre><code>{
-  "metadata": {
-    "exported_at": "ISO timestamp",
-    "total_devices": 150,
-    "online_devices": 120,
-    "offline_devices": 30,
-    "export_version": "2.0"
-  },
-  "summary": {
-    "firmware_distribution": {...},
-    "avg_offline_days": 2.5,
-    "critical_battery": 5
-  },
-  "devices": [
-    {
-      "imei": "869247060051882",
-      "status": {...},
-      "hardware": {...},
-      "connectivity": {...},
-      "storage": {...},
-      "channels": {...},
-      "firmware_analysis": {...},
-      "raw_data": {...}
-    }
-  ]
-}</code></pre>
+                                    
+                                    <div class="feature-item">
+                                        <h4><i class="fas fa-download"></i> Exportação por Versão</h4>
+                                        <p>No modal de detalhes do firmware, você pode exportar apenas os equipamentos daquela versão específica em formato CSV.</p>
                                     </div>
                                 </div>
                             </div>
@@ -487,306 +293,257 @@
                     </div>
                     <div class="card-body">
                         <div class="dashboard-info">
-                            <div class="dashboard-card">
-                                <h3><i class="fas fa-tachometer-alt"></i> Métricas em Tempo Real</h3>
-                                <div class="metrics-grid">
-                                    <div class="metric-item">
-                                        <strong>Total de Equipamentos:</strong> Contador geral de dispositivos consultados
-                                    </div>
-                                    <div class="metric-item">
-                                        <strong>Online/Offline:</strong> Distribuição de status com percentuais
-                                    </div>
-                                    <div class="metric-item">
-                                        <strong>Bateria Crítica:</strong> Equipamentos com voltagem < 11.5V
-                                    </div>
-                                    <div class="metric-item">
-                                        <strong>Média Offline:</strong> Tempo médio que equipamentos ficam offline
-                                    </div>
-                                    <div class="metric-item">
-                                        <strong>Problemas de Armazenamento:</strong> SD cards com uso > 90%
-                                    </div>
-                                    <div class="metric-item">
-                                        <strong>Distribuição de Firmware:</strong> Análise de versões em uso
-                                    </div>
+                            <h3><i class="fas fa-eye"></i> Visualização e Controle</h3>
+                            <p>O dashboard fornece uma visão analítica completa dos equipamentos consultados, com métricas em tempo real e gráficos interativos.</p>
+                            
+                            <div class="dashboard-sections">
+                                <div class="section-item">
+                                    <h4><i class="fas fa-tachometer-alt"></i> Métricas Gerais</h4>
+                                    <ul>
+                                        <li><strong>Total de Equipamentos:</strong> Quantidade total consultada</li>
+                                        <li><strong>Equipamentos Online:</strong> Dispositivos com comunicação recente</li>
+                                        <li><strong>Equipamentos Offline:</strong> Dispositivos sem comunicação</li>
+                                        <li><strong>Média de Dias Offline:</strong> Tempo médio sem comunicação</li>
+                                        <li><strong>Problemas de Armazenamento:</strong> Equipamentos com cartão SD acima de 90%</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="section-item">
+                                    <h4><i class="fas fa-wifi"></i> Status de Conectividade</h4>
+                                    <p>Gráfico visual mostrando a distribuição entre equipamentos online e offline, com cores distintivas.</p>
+                                </div>
+                                
+                                <div class="section-item">
+                                    <h4><i class="fas fa-microchip"></i> Distribuição de Firmware</h4>
+                                    <p>Cards clicáveis mostrando cada versão de firmware encontrada:</p>
+                                    <ul>
+                                        <li>Versão do firmware</li>
+                                        <li>Quantidade de equipamentos</li>
+                                        <li>Indicador se está atualizado (comparado com firmware de referência)</li>
+                                        <li>Clique para ver detalhes dos equipamentos</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="section-item">
+                                    <h4><i class="fas fa-sd-card"></i> Status de Armazenamento</h4>
+                                    <p>Análise do uso de cartão SD dos equipamentos:</p>
+                                    <ul>
+                                        <li>Equipamentos com armazenamento normal</li>
+                                        <li>Equipamentos com uso alto (acima de 90%)</li>
+                                        <li>Distribuição por tipo de armazenamento (SD1, SD2, Memória)</li>
+                                    </ul>
                                 </div>
                             </div>
-
-                            <div class="dashboard-card">
-                                <h3><i class="fas fa-chart-pie"></i> Gráficos Visuais</h3>
-                                <ul>
-                                    <li><strong>Gráfico Pizza:</strong> Distribuição Online vs Offline</li>
-                                    <li><strong>Gráfico Barras:</strong> Status por categoria (Online, Offline, Crítico)</li>
-                                    <li><strong>Distribuição de Firmware:</strong> Versões mais utilizadas</li>
-                                    <li><strong>Timeline:</strong> Histórico de última comunicação</li>
-                                </ul>
-                            </div>
-
-                            <div class="dashboard-card">
-                                <h3><i class="fas fa-exclamation-triangle"></i> Alertas e Problemas</h3>
-                                <div class="alert-types">
-                                    <div class="alert-item critical">
-                                        <strong>Crítico:</strong> Bateria muito baixa (< 11V)
-                                    </div>
-                                    <div class="alert-item warning">
-                                        <strong>Atenção:</strong> Offline há mais de 7 dias
-                                    </div>
-                                    <div class="alert-item info">
-                                        <strong>Informação:</strong> Armazenamento acima de 90%
-                                    </div>
+                            
+                            <div class="dashboard-controls">
+                                <h3><i class="fas fa-sliders-h"></i> Controles do Dashboard</h3>
+                                <div class="control-item">
+                                    <h4><i class="fas fa-eye"></i> Mostrar/Ocultar</h4>
+                                    <p>Use o botão "Mostrar Dashboard" para exibir ou ocultar a visualização analítica.</p>
                                 </div>
-                            </div>
-
-                            <div class="dashboard-card">
-                                <h3><i class="fas fa-sync-alt"></i> Atualização Automática</h3>
-                                <p>O dashboard é atualizado automaticamente sempre que:</p>
-                                <ul>
-                                    <li>Uma nova consulta é realizada</li>
-                                    <li>Filtros são aplicados aos resultados</li>
-                                    <li>Dados são carregados do cache</li>
-                                    <li>Firmware de referência é alterado</li>
-                                </ul>
+                                
+                                <div class="control-item">
+                                    <h4><i class="fas fa-sync-alt"></i> Atualização Automática</h4>
+                                    <p>O dashboard se atualiza automaticamente a cada nova consulta realizada.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Seção: Solução de Problemas -->
-            <section id="solucao-problemas" class="help-section">
+            <!-- Seção: Exportação -->
+            <section id="exportacao" class="help-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-download"></i> Exportação de Dados</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="export-info">
+                            <h3><i class="fas fa-file-export"></i> Formatos Disponíveis</h3>
+                            <p>O sistema oferece três formatos de exportação para atender diferentes necessidades de análise:</p>
+                            
+                            <div class="export-formats">
+                                <div class="format-item">
+                                    <h4><i class="fas fa-file-csv"></i> CSV (Comma-Separated Values)</h4>
+                                    <p>Formato ideal para análise em planilhas e importação em outros sistemas.</p>
+                                    <ul>
+                                        <li>Compatível com Excel, Google Sheets</li>
+                                        <li>Separador: ponto e vírgula (;)</li>
+                                        <li>Codificação: UTF-8 com BOM</li>
+                                        <li>Formatação brasileira de datas</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="format-item">
+                                    <h4><i class="fas fa-file-excel"></i> Excel (.xlsx)</h4>
+                                    <p>Formato nativo do Microsoft Excel com formatação avançada.</p>
+                                    <ul>
+                                        <li>Formatação automática de colunas</li>
+                                        <li>Cores para status (verde=online, vermelho=offline)</li>
+                                        <li>Largura otimizada das colunas</li>
+                                        <li>Compatível com Excel 2007+</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="format-item">
+                                    <h4><i class="fas fa-code"></i> JSON (JavaScript Object Notation)</h4>
+                                    <p>Formato para integração com sistemas e análise programática.</p>
+                                    <ul>
+                                        <li>Dados estruturados completos</li>
+                                        <li>Inclui metadados da consulta</li>
+                                        <li>Timestamp da exportação</li>
+                                        <li>Ideal para APIs e sistemas</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="export-fields">
+                                <h3><i class="fas fa-table"></i> Campos Exportados</h3>
+                                <p>Todos os formatos incluem os seguintes campos:</p>
+                                <div class="fields-grid">
+                                    <div class="field-item">
+                                        <strong>IMEI:</strong> Identificador único do equipamento
+                                    </div>
+                                    <div class="field-item">
+                                        <strong>Status:</strong> Online ou Offline
+                                    </div>
+                                    <div class="field-item">
+                                        <strong>Versão do Firmware:</strong> Versão atual do equipamento
+                                    </div>
+                                    <div class="field-item">
+                                        <strong>Última Comunicação:</strong> Data/hora da última comunicação
+                                    </div>
+                                    <div class="field-item">
+                                        <strong>Dias Offline:</strong> Quantidade de dias sem comunicação
+                                    </div>
+                                    <div class="field-item">
+                                        <strong>Cartão SD:</strong> Status do armazenamento
+                                    </div>
+                                    <div class="field-item">
+                                        <strong>Dados Técnicos:</strong> Informações completas do equipamento
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="export-types">
+                                <h3><i class="fas fa-filter"></i> Tipos de Exportação</h3>
+                                
+                                <div class="type-item">
+                                    <h4><i class="fas fa-list"></i> Exportação Completa</h4>
+                                    <p>Exporta todos os equipamentos consultados com todos os dados disponíveis.</p>
+                                </div>
+                                
+                                <div class="type-item">
+                                    <h4><i class="fas fa-microchip"></i> Exportação por Firmware</h4>
+                                    <p>No modal de detalhes do firmware, exporta apenas os equipamentos de uma versão específica.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção: Troubleshooting -->
+            <section id="troubleshooting" class="help-section">
                 <div class="card">
                     <div class="card-header">
                         <h2><i class="fas fa-tools"></i> Solução de Problemas</h2>
                     </div>
                     <div class="card-body">
-                        <div class="troubleshooting">
-                            <div class="problem-category">
-                                <h3><i class="fas fa-exclamation-circle"></i> Problemas com IMEIs</h3>
+                        <div class="troubleshooting-info">
+                            <h3><i class="fas fa-question-circle"></i> Problemas Comuns e Soluções</h3>
+                            
+                            <div class="problem-section">
+                                <h4><i class="fas fa-search"></i> Problemas de Consulta</h4>
                                 <div class="problem-item">
-                                    <h4>IMEI Inválido</h4>
-                                    <p><strong>Sintomas:</strong> Mensagem de erro, IMEI destacado em vermelho</p>
-                                    <p><strong>Causa:</strong> IMEI não tem 15 dígitos ou contém caracteres não numéricos</p>
-                                    <p><strong>Solução:</strong></p>
+                                    <h5>Consulta não funciona ou trava</h5>
+                                    <p><strong>Soluções:</strong></p>
                                     <ul>
-                                        <li>Verifique se o IMEI tem exatamente 15 dígitos</li>
-                                        <li>Remova espaços, traços ou outros caracteres</li>
-                                        <li>Confirme se não há zeros à esquerda faltando</li>
+                                        <li>Verifique se os IMEIs estão corretos (15 dígitos)</li>
+                                        <li>Reduza a quantidade de IMEIs por consulta</li>
+                                        <li>Aguarde alguns segundos e tente novamente</li>
+                                        <li>Verifique conexão com a internet</li>
                                     </ul>
                                 </div>
-
+                                
                                 <div class="problem-item">
-                                    <h4>Arquivo não Carregou</h4>
-                                    <p><strong>Sintomas:</strong> Erro ao carregar arquivo .txt ou .csv</p>
-                                    <p><strong>Solução:</strong></p>
+                                    <h5>Resultados inconsistentes</h5>
+                                    <p><strong>Soluções:</strong></p>
                                     <ul>
-                                        <li>Verifique se o arquivo está no formato .txt ou .csv</li>
-                                        <li>Confirme que há um IMEI por linha</li>
-                                        <li>Remova cabeçalhos ou linhas em branco</li>
-                                        <li>Verifique a codificação do arquivo (UTF-8 recomendado)</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="problem-category">
-                                <h3><i class="fas fa-wifi"></i> Problemas de Conectividade</h3>
-                                <div class="problem-item">
-                                    <h4>Erro de Rede/API</h4>
-                                    <p><strong>Sintomas:</strong> Falha na consulta, timeout, erro HTTP</p>
-                                    <p><strong>Solução:</strong></p>
-                                    <ul>
-                                        <li>Verifique sua conexão com a internet</li>
-                                        <li>Tente reduzir o número de IMEIs por consulta</li>
-                                        <li>Aguarde alguns minutos e tente novamente</li>
-                                        <li>Verifique se não há proxy/firewall bloqueando</li>
-                                    </ul>
-                                </div>
-
-                                <div class="problem-item">
-                                    <h4>Timeout da Requisição</h4>
-                                    <p><strong>Sintomas:</strong> Consulta trava ou demora muito</p>
-                                    <p><strong>Solução:</strong></p>
-                                    <ul>
-                                        <li>Reduza o número de IMEIs (máximo 50 por vez)</li>
-                                        <li>Verifique a estabilidade da internet</li>
-                                        <li>Tente em horários de menor tráfego</li>
+                                        <li>Aguarde e refaça a consulta</li>
+                                        <li>Verifique se a API está funcionando</li>
+                                        <li>Limpe cache do sistema</li>
+                                        <li>Consulte IMEIs em lotes menores</li>
                                     </ul>
                                 </div>
                             </div>
-
-                            <div class="problem-category">
-                                <h3><i class="fas fa-database"></i> Problemas com Dados</h3>
+                            
+                            <div class="problem-section">
+                                <h4><i class="fas fa-chart-bar"></i> Problemas de Dashboard</h4>
                                 <div class="problem-item">
-                                    <h4>Dados Incompletos</h4>
-                                    <p><strong>Sintomas:</strong> Informações faltando ou "N/A"</p>
-                                    <p><strong>Causa:</strong> Normal para equipamentos offline ou com problemas</p>
-                                    <p><strong>Solução:</strong></p>
+                                    <h5>Dashboard não carrega ou mostra dados incorretos</h5>
+                                    <p><strong>Soluções:</strong></p>
                                     <ul>
-                                        <li>Verifique se o equipamento está realmente online</li>
-                                        <li>Consulte novamente após algumas horas</li>
-                                        <li>Confirme se o IMEI está correto</li>
+                                        <li>Recarregue a página</li>
+                                        <li>Limpe cache do navegador</li>
+                                        <li>Refaça a consulta dos IMEIs</li>
+                                        <li>Verifique se há dados suficientes</li>
                                     </ul>
                                 </div>
-
+                                
                                 <div class="problem-item">
-                                    <h4>Cache Desatualizado</h4>
-                                    <p><strong>Sintomas:</strong> Dados antigos sendo exibidos</p>
-                                    <p><strong>Solução:</strong></p>
+                                    <h5>Cards de firmware não são clicáveis</h5>
+                                    <p><strong>Soluções:</strong></p>
                                     <ul>
-                                        <li>Force uma nova consulta sem usar cache</li>
-                                        <li>Limpe o cache do navegador (F5 + Ctrl)</li>
-                                        <li>Use modo incógnito para teste</li>
+                                        <li>Aguarde o carregamento completo</li>
+                                        <li>Recarregue a página</li>
+                                        <li>Verifique se JavaScript está habilitado</li>
+                                        <li>Tente um navegador diferente</li>
                                     </ul>
                                 </div>
                             </div>
-
-                            <div class="problem-category">
-                                <h3><i class="fas fa-mobile-alt"></i> Problemas de Interface</h3>
+                            
+                            <div class="problem-section">
+                                <h4><i class="fas fa-download"></i> Problemas de Exportação</h4>
                                 <div class="problem-item">
-                                    <h4>Layout Quebrado no Mobile</h4>
-                                    <p><strong>Solução:</strong></p>
-                                    <ul>
-                                        <li>Atualize o navegador para a versão mais recente</li>
-                                        <li>Tente rotacionar a tela (landscape/portrait)</li>
-                                        <li>Zoom out se necessário</li>
-                                    </ul>
-                                </div>
-
-                                <div class="problem-item">
-                                    <h4>Exportação não Funciona</h4>
-                                    <p><strong>Solução:</strong></p>
+                                    <h5>Exportação não funciona ou arquivo corrompido</h5>
+                                    <p><strong>Soluções:</strong></p>
                                     <ul>
                                         <li>Verifique se há dados para exportar</li>
-                                        <li>Permita downloads no navegador</li>
-                                        <li>Tente um formato diferente (CSV em vez de Excel)</li>
+                                        <li>Tente um formato diferente (CSV, Excel, JSON)</li>
+                                        <li>Aguarde alguns segundos e tente novamente</li>
+                                        <li>Verifique permissões de download do navegador</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="problem-item">
+                                    <h5>Arquivo exportado não abre corretamente</h5>
+                                    <p><strong>Soluções:</strong></p>
+                                    <ul>
+                                        <li>Para CSV: Abra com Excel usando importação de dados</li>
+                                        <li>Para Excel: Verifique se tem Excel 2007+ instalado</li>
+                                        <li>Para JSON: Use editor de texto ou ferramenta JSON</li>
+                                        <li>Verifique se o download foi concluído</li>
                                     </ul>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Seção: API -->
-            <section id="api" class="help-section">
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-code"></i> Informações Técnicas da API</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="api-info">
-                            <div class="api-card">
-                                <h3><i class="fas fa-link"></i> Endpoint da API</h3>
-                                <div class="api-details">
-                                    <p><strong>URL:</strong> <code>http://fota-api.jimicloud.com/queryDeviceStatus</code></p>
-                                    <p><strong>Método:</strong> <code>POST</code></p>
-                                    <p><strong>Autenticação:</strong> Bearer Token</p>
-                                    <p><strong>Content-Type:</strong> <code>application/json</code></p>
-                                </div>
-                            </div>
-
-                            <div class="api-card">
-                                <h3><i class="fas fa-cog"></i> Configurações de Requisição</h3>
-                                <div class="config-grid">
-                                    <div class="config-item">
-                                        <strong>Timeout:</strong> 30 segundos
-                                    </div>
-                                    <div class="config-item">
-                                        <strong>Retry:</strong> 3 tentativas
-                                    </div>
-                                    <div class="config-item">
-                                        <strong>Lote Máximo:</strong> 100 IMEIs
-                                    </div>
-                                    <div class="config-item">
-                                        <strong>Rate Limit:</strong> Circuit breaker ativo
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="api-card">
-                                <h3><i class="fas fa-exchange-alt"></i> Formato da Requisição</h3>
-                                <div class="api-example">
-                                    <pre><code>{
-  "imei": [
-    "869247060051882",
-    "868120302622664",
-    "868120302622665"
-  ]
-}</code></pre>
-                                </div>
-                            </div>
-
-                            <div class="api-card">
-                                <h3><i class="fas fa-download"></i> Estrutura da Resposta</h3>
-                                <div class="response-structure">
-                                    <h4>Campos Principais:</h4>
-                                    <ul>
-                                        <li><strong>imei:</strong> IMEI do equipamento</li>
-                                        <li><strong>version:</strong> Versão do firmware</li>
-                                        <li><strong>lastTime:</strong> Timestamp da última comunicação</li>
-                                        <li><strong>iccid:</strong> Identificador do SIM card</li>
-                                        <li><strong>server:</strong> Servidor de comunicação</li>
-                                        <li><strong>log:</strong> Log de status do equipamento</li>
-                                        <li><strong>selfCheckParam:</strong> Parâmetros de autodiagnóstico</li>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="api-card">
-                                <h3><i class="fas fa-clock"></i> Processamento de Dados</h3>
-                                <div class="processing-steps">
-                                    <ol>
-                                        <li><strong>Conversão de Timezone:</strong> China (UTC+8) → Brasil (UTC-3)</li>
-                                        <li><strong>Parsing de Firmware:</strong> Extração da versão do campo adequado</li>
-                                        <li><strong>Cálculo de Status:</strong> Online se comunicação < 24h</li>
-                                        <li><strong>Análise de selfCheckParam:</strong> Extração de dados técnicos</li>
-                                        <li><strong>Comparação de Firmware:</strong> Com versão de referência</li>
-                                        <li><strong>Cache de Resultados:</strong> Armazenamento local para performance</li>
-                                    </ol>
-                                </div>
-                            </div>
-
-                            <div class="api-card">
-                                <h3><i class="fas fa-shield-alt"></i> Tratamento de Erros</h3>
-                                <div class="error-handling">
-                                    <div class="error-type">
-                                        <strong>Erro 401:</strong> Token inválido ou expirado
-                                    </div>
-                                    <div class="error-type">
-                                        <strong>Erro 429:</strong> Rate limit excedido
-                                    </div>
-                                    <div class="error-type">
-                                        <strong>Erro 500:</strong> Erro interno do servidor
-                                    </div>
-                                    <div class="error-type">
-                                        <strong>Timeout:</strong> Requisição demorou mais que 30s
-                                    </div>
-                                    <div class="error-type">
-                                        <strong>Network Error:</strong> Falha de conectividade
-                                    </div>
-                                </div>
+                            
+                            <div class="emergency-contact">
+                                <h3><i class="fas fa-life-ring"></i> Suporte Técnico</h3>
+                                <p>Se os problemas persistirem:</p>
+                                <ul>
+                                    <li>Anote o erro específico (se houver)</li>
+                                    <li>Documente os passos que levaram ao problema</li>
+                                    <li>Verifique o console do navegador (F12)</li>
+                                    <li>Entre em contato com o suporte técnico</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
-
-        <!-- Footer com informações adicionais -->
-        <footer class="help-footer">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3><i class="fas fa-info-circle"></i> Sobre o Sistema</h3>
-                    <p>Sistema Allcom JC450 desenvolvido para consulta profissional de status de equipamentos via API JimiCloud.</p>
-                </div>
-                <div class="footer-section">
-                    <h3><i class="fas fa-code"></i> Tecnologias</h3>
-                    <p>HTML5, CSS3, JavaScript ES6+, Font Awesome, Google Fonts</p>
-                </div>
-                <div class="footer-section">
-                    <h3><i class="fas fa-calendar"></i> Última Atualização</h3>
-                    <p>Julho 2025 - Versão 2.0</p>
-                </div>
-            </div>
-        </footer>
     </div>
 
     <!-- CSS adicional para a documentação -->
@@ -1232,32 +989,6 @@
             padding: 1rem;
             border-radius: 8px;
             border-left: 4px solid #e53e3e;
-        }
-
-        /* Footer */
-        .help-footer {
-            background: #2d3748;
-            color: white;
-            padding: 3rem 0;
-            margin-top: 4rem;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-        }
-
-        .footer-section h3 {
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .footer-section p {
-            color: #a0aec0;
-            line-height: 1.6;
         }
 
         /* Responsive */

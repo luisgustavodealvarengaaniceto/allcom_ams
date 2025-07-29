@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Novos Campos de Exportação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            background: #ffeaea;
+            border-left: 4px solid #f44336;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .field-test {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 3px;
+        }
+        .field-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .field-value {
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste - Novos Campos de Exportação</h1>
+        <p>Este teste valida a extração dos novos campos: URLTYPE, WAKEMODE, APN, SERVER, DMSSW,1,0 e DMSSW,2,0</p>
+
+        <div class="test-section">
+            <h3>📋 Dados de Teste</h3>
+            <p>Usando o exemplo fornecido pelo usuário:</p>
+            <pre id="testData"></pre>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Resultados da Extração</h3>
+            <button onclick="runTests()">▶️ Executar Testes</button>
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Simulação de Export CSV</h3>
+            <button onclick="testCSVExport()">📁 Testar Export CSV</button>
+            <div id="csvResults"></div>
+        </div>
+    </div>
+
+    <script src="js/export-manager.js"></script>
+    <script>
+        // Dados de teste baseados no exemplo do usuário
+        const testDevice = {
+            imei: '869247060250500',
+            version: 'C450Pro_2.0.13_20250410',
+            server: '164.152.62.67:21122,NA:NA',
+            getIp: null,
+            mcu: null,
+            csq: '-101dbm 15asu',
+            bat: null,
+            iccid: '89555480000040641041',
+            mode: null,
+            log: 'NETWORK:4g  Connected, CH1:Normal, CH2:Normal, CH3:Normal, CH4:Normal, CH5:Not_exist, GPS:Success Positioned(13), MEMORY:2.75 GB/2.05 GB, SD1:238 GB/2.01 GB, SD2:238 GB/2.13 GB, ACC:ON, POWER:27.78, CPU_TEMP:44, DMS:1/1/NA, ADAS:1/0/320/271/NA/true',
+            voltage: null,
+            temperature: null,
+            firstTime: '2024-11-19T13:57:03.000+00:00',
+            lastTime: '2025-07-22T14:46:07.000+00:00',
+            power: '27.89',
+            selfCheckParam: 'IMEI:869247060250500; VERSION:C450Pro_2.0.13_20250410; SERVER:164.152.62.67:21122,NA:NA; APN:portoconecta.br,724,54; CSQ:-101dbm 15asu; POWER:27.89; ICCID:89555480000040641041; IMSI:724548003067792; TIMER:10; COMVER:EC25AUXGAR08A07M1G_01.001.01.001; BCD:0; WAKEMODE:101; URLTYPE:2',
+            isOnline: true,
+            lastTimeBrasilia: '22/07/2025 11:46:07',
+            offlineDays: 0
+        };
+
+        // Mostrar dados de teste
+        document.getElementById('testData').textContent = JSON.stringify(testDevice, null, 2);
+
+        function runTests() {
+            const exportManager = new ExportManager();
+            const results = document.getElementById('results');
+            
+            const tests = [
+                { name: 'URLTYPE', method: 'extractURLTYPE', expected: '2' },
+                { name: 'WAKEMODE', method: 'extractWAKEMODE', expected: '101' },
+                { name: 'APN', method: 'extractAPN', expected: 'portoconecta.br,724,54' },
+                { name: 'SERVER (SelfCheck)', method: 'extractSERVER', expected: '164.152.62.67:21122,NA:NA' },
+                { name: 'DMSSW,1,0', method: 'extractDMSSW1', expected: '1/1' },
+                { name: 'DMSSW,2,0', method: 'extractDMSSW2', expected: '1/0' }
+            ];
+
+            let html = '';
+            let allPassed = true;
+
+            tests.forEach(test => {
+                try {
+                    const result = exportManager[test.method](testDevice);
+                    const passed = result !== 'Não encontrado';
+                    
+                    html += `
+                        <div class="field-test ${passed ? '' : 'error'}">
+                            <span class="field-name">${test.name}:</span>
+                            <span class="field-value">${result}</span>
+                            <span style="color: ${passed ? 'green' : 'red'}">
+                                ${passed ? '✅' : '❌'}
+                            </span>
+                        </div>
+                    `;
+                    
+                    if (!passed) allPassed = false;
+                } catch (error) {
+                    html += `
+                        <div class="field-test error">
+                            <span class="field-name">${test.name}:</span>
+                            <span class="field-value">ERRO: ${error.message}</span>
+                            <span style="color: red">❌</span>
+                        </div>
+                    `;
+                    allPassed = false;
+                }
+            });
+
+            html += `<div class="result ${allPassed ? '' : 'error'}">
+                <strong>${allPassed ? '✅ Todos os testes passaram!' : '❌ Alguns testes falharam'}</strong>
+            </div>`;
+
+            results.innerHTML = html;
+        }
+
+        function testCSVExport() {
+            const exportManager = new ExportManager();
+            const csvResults = document.getElementById('csvResults');
+            
+            try {
+                // Simular dados para CSV
+                const devices = [testDevice];
+                
+                // Extrair todos os novos campos
+                const newFields = {
+                    'URLTYPE': exportManager.extractURLTYPE(testDevice),
+                    'WAKEMODE': exportManager.extractWAKEMODE(testDevice),
+                    'APN': exportManager.extractAPN(testDevice),
+                    'SERVER (SelfCheck)': exportManager.extractSERVER(testDevice),
+                    'DMSSW,1,0': exportManager.extractDMSSW1(testDevice),
+                    'DMSSW,2,0': exportManager.extractDMSSW2(testDevice)
+                };
+
+                let html = '<h4>🎯 Novos campos que serão adicionados ao CSV/Excel:</h4>';
+                
+                Object.entries(newFields).forEach(([field, value]) => {
+                    html += `
+                        <div class="field-test">
+                            <span class="field-name">${field}:</span>
+                            <span class="field-value">${value}</span>
+                        </div>
+                    `;
+                });
+
+                // Mostrar um exemplo de linha CSV
+                const csvLine = Object.values(newFields).map(v => `"${v}"`).join(',');
+                html += `
+                    <h4>📝 Exemplo de linha CSV (apenas novos campos):</h4>
+                    <pre>${csvLine}</pre>
+                `;
+
+                csvResults.innerHTML = html;
+                
+            } catch (error) {
+                csvResults.innerHTML = `<div class="result error">
+                    <strong>❌ Erro no teste de CSV:</strong> ${error.message}
+                </div>`;
+            }
+        }
+
+        // Executar testes automaticamente ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            runTests();
+        });
+    </script>
+</body>
+</html>

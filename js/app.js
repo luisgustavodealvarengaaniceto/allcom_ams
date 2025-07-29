@@ -10,7 +10,7 @@ const API_CONFIG = {
     proxyEndpoint: 'http://localhost:3001/api', // HTTPS para proxy
     appKey: 'Jimiiotbrasil',
     secret: '23dd6cca658b4ec298aeb7beb4972fd4',
-    maxBatchSize: 99
+    maxBatchSize: 15 // Reduzido de 99 para 15 devido a limite da API JimiCloud
 };
 
 // Global state
@@ -219,6 +219,23 @@ function setupEventListeners() {
             hideModal();
         }
     });
+    
+    // Adicionar suporte para tecla ESC nos modais
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // Fechar modal de firmware se estiver aberto
+            const firmwareModal = document.getElementById('firmwareModal');
+            if (firmwareModal) {
+                closeFirmwareModal();
+            }
+            
+            // Fechar modal de detalhes do dispositivo se estiver aberto
+            const deviceModal = document.getElementById('deviceModal');
+            if (deviceModal && deviceModal.style.display !== 'none') {
+                hideModal();
+            }
+        }
+    });
 }
 
 // IMEI input handler
@@ -267,7 +284,7 @@ function updateImeiCount() {
         imeiCount.innerHTML = `
             ${imeis.length} IMEIs inseridos 
             <small style="display: block; margin-top: 0.25rem; color: #667eea; font-weight: 500;">
-                Será processado em ${batchCount} lotes de até 100 IMEIs cada
+                Processamento automático em lotes
             </small>
         `;
         imeiCount.style.color = '#4a5568';
@@ -351,8 +368,25 @@ function loadImeisFromText(content, fileName) {
     fileInput.value = '';
 }
 
-// Main consultation handler
+// Main consultation handler with debounce protection
+let isConsulting = false;
+let lastConsultTime = 0;
+const CONSULT_DEBOUNCE_TIME = 3000; // 3 seconds between requests
+
 async function handleConsultar() {
+    // Prevent rapid multiple clicks
+    const now = Date.now();
+    if (isConsulting) {
+        showToast('Aviso', 'Uma consulta já está em andamento. Aguarde a conclusão.', 'warning');
+        return;
+    }
+    
+    if (now - lastConsultTime < CONSULT_DEBOUNCE_TIME) {
+        const remainingTime = Math.ceil((CONSULT_DEBOUNCE_TIME - (now - lastConsultTime)) / 1000);
+        showToast('Aviso', `Aguarde ${remainingTime} segundos antes de fazer uma nova consulta.`, 'warning');
+        return;
+    }
+
     const imeis = getValidImeis();
     
     if (imeis.length === 0) {
@@ -360,12 +394,26 @@ async function handleConsultar() {
         return;
     }
 
+    // Check circuit breaker status before starting
+    if (performanceManager && !performanceManager.canMakeRequest()) {
+        const circuitState = performanceManager.getCircuitBreakerState();
+        showToast('Sistema Indisponível', 'Sistema temporariamente indisponível devido a muitos erros. Aguarde alguns minutos antes de tentar novamente.', 'error');
+        console.log('Circuit breaker state:', circuitState);
+        return;
+    }
+
+    isConsulting = true;
+    lastConsultTime = now;
+    consultarBtn.disabled = true;
+    consultarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando...';
+
     const batchCount = Math.ceil(imeis.length / API_CONFIG.maxBatchSize);
     const confirmMessage = imeis.length > API_CONFIG.maxBatchSize 
         ? `Você está prestes a consultar ${imeis.length} IMEIs em ${batchCount} lotes. Isso pode levar alguns minutos. Deseja continuar?`
         : `Consultar status de ${imeis.length} equipamento${imeis.length > 1 ? 's' : ''}?`;
     
     if (imeis.length > 200 && !confirm(confirmMessage)) {
+        resetConsultButton();
         return;
     }
 
@@ -376,6 +424,14 @@ async function handleConsultar() {
         deviceResults = [];
         const batches = createBatches(imeis, API_CONFIG.maxBatchSize);
         let processedCount = 0;
+        let successfulBatches = 0;
+        let failedBatches = 0;
+        
+        // Track individual processing statistics
+        const individualStats = {
+            attempted: 0,
+            recovered: 0
+        };
         
         showToast('Iniciando', `Processando ${imeis.length} IMEIs em ${batches.length} lote${batches.length > 1 ? 's' : ''}`, 'info');
         
@@ -387,16 +443,82 @@ async function handleConsultar() {
             
             try {
                 const batchResults = await queryDeviceStatusWithPerformance(batch);
-                deviceResults.push(...batchResults);
+                
+                // Identificar IMEIs que foram processados com sucesso
+                const processedImeis = new Set(batchResults.map(result => result.imei));
+                const failedImeis = batch.filter(imei => !processedImeis.has(imei));
+                
+                // Sempre adicionar resultados, mesmo que parciais
+                if (batchResults && batchResults.length > 0) {
+                    deviceResults.push(...batchResults);
+                    console.log(`[Lote ${i + 1}] Adicionados ${batchResults.length} resultados de ${batch.length} solicitados`);
+                } else {
+                    console.warn(`[Lote ${i + 1}] Nenhum resultado retornado para ${batch.length} IMEIs`);
+                }
+                
+                // Se há IMEIs que falharam no lote, tentar processá-los individualmente
+                if (failedImeis.length > 0 && failedImeis.length < batch.length) {
+                    console.log(`[Lote ${i + 1}] Tentando reprocessar ${failedImeis.length} IMEIs individualmente:`, failedImeis);
+                    showToast('Reprocessando', `Reprocessando ${failedImeis.length} IMEIs individualmente...`, 'info');
+                    
+                    individualStats.attempted += failedImeis.length;
+                    const individualResults = await processIndividualImeis(failedImeis, i + 1);
+                    if (individualResults.length > 0) {
+                        deviceResults.push(...individualResults);
+                        individualStats.recovered += individualResults.length;
+                        console.log(`[Lote ${i + 1}] Recuperados ${individualResults.length} IMEIs no reprocessamento individual`);
+                        showToast('Recuperados', `${individualResults.length} IMEIs recuperados no reprocessamento!`, 'success');
+                    }
+                }
+                
                 processedCount += batch.length;
+                successfulBatches++;
                 
                 // Update progress after each batch
                 const progressAfterBatch = ((i + 1) / batches.length) * 100;
-                updateProgress(progressAfterBatch, `Lote ${i + 1}/${batches.length} concluído (${processedCount}/${imeis.length} IMEIs processados)`);
+                updateProgress(progressAfterBatch, `Lote ${i + 1}/${batches.length} concluído (${deviceResults.length} resultados de ${processedCount} IMEIs processados)`);
                 
             } catch (error) {
                 console.error(`Erro no lote ${i + 1}:`, error);
-                showToast('Aviso', `Erro ao processar lote ${i + 1}: ${error.message}`, 'warning');
+                failedBatches++;
+                
+                // Tentar recuperar resultados parciais mesmo com erro
+                if (error.partialResults && error.partialResults.length > 0) {
+                    deviceResults.push(...error.partialResults);
+                    console.log(`[Lote ${i + 1}] Recuperados ${error.partialResults.length} resultados parciais após erro`);
+                    showToast('Parcial', `Lote ${i + 1}: Erro, mas ${error.partialResults.length} resultados foram recuperados`, 'warning');
+                } else {
+                    // Tentar processar todos os IMEIs do lote individualmente em caso de erro completo
+                    console.log(`[Lote ${i + 1}] Erro completo, tentando processar ${batch.length} IMEIs individualmente...`);
+                    showToast('Erro no Lote', `Erro no lote ${i + 1}, tentando processar IMEIs individualmente...`, 'warning');
+                    
+                    try {
+                        individualStats.attempted += batch.length;
+                        const individualResults = await processIndividualImeis(batch, i + 1);
+                        if (individualResults.length > 0) {
+                            deviceResults.push(...individualResults);
+                            individualStats.recovered += individualResults.length;
+                            console.log(`[Lote ${i + 1}] Recuperados ${individualResults.length} IMEIs através de processamento individual`);
+                            showToast('Recuperação', `${individualResults.length} IMEIs recuperados através de processamento individual!`, 'success');
+                        }
+                    } catch (individualError) {
+                        console.error(`[Lote ${i + 1}] Erro também no processamento individual:`, individualError);
+                        
+                        // More specific error handling
+                        if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+                            showToast('Erro do Servidor', `Lote ${i + 1}: Servidor da API temporariamente indisponível. Tentando continuar...`, 'warning');
+                        } else if (error.message.includes('timeout')) {
+                            showToast('Timeout', `Lote ${i + 1}: Timeout na requisição. Tentando continuar...`, 'warning');
+                        } else if (error.message.includes('Circuit breaker')) {
+                            showToast('Sistema Pausado', 'Sistema pausado devido a muitos erros. Interrompendo consulta.', 'error');
+                            break; // Stop processing if circuit breaker opens
+                        } else {
+                            showToast('Aviso', `Erro no lote ${i + 1}: ${error.message}`, 'warning');
+                        }
+                    }
+                }
+                
+                processedCount += batch.length; // Contar como processados mesmo com erro
                 
                 // Continue with remaining batches even if one fails
                 continue;
@@ -404,8 +526,13 @@ async function handleConsultar() {
             
             // Progressive delay to avoid overwhelming the API
             if (i < batches.length - 1) {
-                const delay = batches.length > 5 ? 1000 : 500; // Longer delay for many batches
-                await new Promise(resolve => setTimeout(resolve, delay));
+                const delay = batches.length > 5 ? 2000 : 1000; // Longer delay for many batches and after errors
+                if (failedBatches > 0) {
+                    const extraDelay = failedBatches * 1000; // Extra delay if there were errors
+                    await new Promise(resolve => setTimeout(resolve, delay + extraDelay));
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
             }
         }
         
@@ -414,13 +541,25 @@ async function handleConsultar() {
         // Process results
         processResults();
         
+        // Gerar relatório detalhado de processamento
+        generateProcessingReport(imeis, deviceResults, failedBatches, individualStats);
+        
+        // Mostrar botão do relatório
+        const reportBtn = document.getElementById('reportBtn');
+        if (reportBtn) {
+            reportBtn.style.display = 'inline-flex';
+        }
+        
         // Show summary
         const successCount = deviceResults.length;
         const failedCount = imeis.length - successCount;
         
         let summaryMessage = `Consulta concluída! ${successCount} equipamentos processados com sucesso.`;
         if (failedCount > 0) {
-            summaryMessage += ` ${failedCount} falharam.`;
+            summaryMessage += ` ${failedCount} não foram encontrados.`;
+        }
+        if (failedBatches > 0) {
+            summaryMessage += ` ${failedBatches} lotes falharam.`;
         }
         
         // Hide loading and show results
@@ -435,7 +574,17 @@ async function handleConsultar() {
         console.error('Erro na consulta:', error);
         hideLoading();
         showToast('Erro', `Erro durante a consulta: ${error.message}`, 'error');
+    } finally {
+        // Always reset the consultation state
+        resetConsultButton();
     }
+}
+
+// Reset consultation button and state
+function resetConsultButton() {
+    isConsulting = false;
+    consultarBtn.disabled = false;
+    consultarBtn.innerHTML = '<i class="fas fa-search"></i> Consultar Status';
 }
 
 // Create batches of IMEIs
@@ -460,6 +609,9 @@ async function queryDeviceStatus(imeiList, retries = 2) {
     const batchId = Math.random().toString(36).substr(2, 9);
     console.log(`[${batchId}] Consultando ${imeiList.length} IMEIs:`, imeiList.slice(0, 3).join(', ') + (imeiList.length > 3 ? '...' : ''));
     
+    let partialResults = [];
+    let lastError = null;
+    
     // First try to use local proxy server
     try {
         console.log(`[${batchId}] Tentando usar servidor proxy local...`);
@@ -468,6 +620,7 @@ async function queryDeviceStatus(imeiList, retries = 2) {
         return results;
     } catch (proxyError) {
         console.log(`[${batchId}] Proxy indisponível, tentando acesso direto:`, proxyError.message);
+        lastError = proxyError;
     }
     
     // Fallback to direct API access
@@ -507,11 +660,20 @@ async function queryDeviceStatus(imeiList, retries = 2) {
             const data = await response.json();
             const results = parseApiResponse(data, batchId);
             
-            console.log(`[${batchId}] Sucesso direto: ${results.length} resultados retornados`);
+            console.log(`[${batchId}] Sucesso direto: ${results.length} resultados retornados de ${imeiList.length} solicitados`);
+            
+            // Log IMEIs que não retornaram dados
+            if (results.length < imeiList.length) {
+                const returnedImeis = results.map(r => r.imei);
+                const missingImeis = imeiList.filter(imei => !returnedImeis.includes(imei));
+                console.warn(`[${batchId}] IMEIs não encontrados na resposta (${missingImeis.length}):`, missingImeis);
+            }
+            
             return results;
             
         } catch (error) {
             console.error(`[${batchId}] Tentativa ${attempt} falhou:`, error.message);
+            lastError = error;
             
             if (error.name === 'AbortError') {
                 console.error(`[${batchId}] Timeout na requisição`);
@@ -520,7 +682,6 @@ async function queryDeviceStatus(imeiList, retries = 2) {
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     continue;
                 }
-                throw new Error('Timeout na requisição à API. Tente novamente com menos IMEIs.');
             }
             
             if (error.name === 'TypeError' && 
@@ -533,8 +694,6 @@ async function queryDeviceStatus(imeiList, retries = 2) {
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                     continue;
                 }
-                
-                throw new Error('Erro de CORS. Para resolver:\n1. Execute o servidor proxy: npm start\n2. Ou configure CORS no servidor da API\n3. Ou use uma extensão do navegador para desabilitar CORS');
             }
             
             // For HTTP errors or other errors, retry with exponential backoff
@@ -544,10 +703,18 @@ async function queryDeviceStatus(imeiList, retries = 2) {
                 await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
             }
-            
-            throw error;
         }
     }
+    
+    // Se chegou aqui, todas as tentativas falharam
+    // Criar erro personalizado com resultados parciais se houver
+    const errorWithPartial = new Error(lastError?.message || 'Falha em todas as tentativas de consulta');
+    if (partialResults.length > 0) {
+        errorWithPartial.partialResults = partialResults;
+        console.log(`[${batchId}] Retornando ${partialResults.length} resultados parciais devido a erro`);
+    }
+    
+    throw errorWithPartial;
 }
 
 // Query using local proxy server
@@ -592,23 +759,66 @@ async function queryWithProxy(imeiList, batchId) {
 function parseApiResponse(data, batchId) {
     let results = [];
     
-    if (Array.isArray(data)) {
-        results = data;
-    } else if (data && Array.isArray(data.data)) {
-        results = data.data;
-    } else if (data && data.result && Array.isArray(data.result)) {
-        results = data.result;
-    } else if (data && data.devices && Array.isArray(data.devices)) {
-        results = data.devices;
-    } else if (data && data.success !== false) {
-        // If we get any object response that's not an error, log it and return empty array
-        console.log(`[${batchId}] Resposta inesperada:`, data);
-        results = [];
-    } else {
-        throw new Error(data.message || 'Formato de resposta inválido da API');
-    }
+    console.log(`[${batchId}] Parseando resposta da API:`, typeof data, Array.isArray(data) ? `Array com ${data.length} itens` : 'Objeto');
     
-    return results;
+    try {
+        if (Array.isArray(data)) {
+            results = data;
+            console.log(`[${batchId}] Dados já são array com ${results.length} itens`);
+        } else if (data && Array.isArray(data.data)) {
+            results = data.data;
+            console.log(`[${batchId}] Dados encontrados em data.data com ${results.length} itens`);
+        } else if (data && data.result && Array.isArray(data.result)) {
+            results = data.result;
+            console.log(`[${batchId}] Dados encontrados em data.result com ${results.length} itens`);
+        } else if (data && data.devices && Array.isArray(data.devices)) {
+            results = data.devices;
+            console.log(`[${batchId}] Dados encontrados em data.devices com ${results.length} itens`);
+        } else if (data && data.success !== false) {
+            // Tentar encontrar qualquer array no objeto de resposta
+            console.log(`[${batchId}] Tentando encontrar arrays na resposta...`);
+            for (const key in data) {
+                if (Array.isArray(data[key])) {
+                    console.log(`[${batchId}] Array encontrado em ${key} com ${data[key].length} itens`);
+                    results = data[key];
+                    break;
+                }
+            }
+            
+            if (results.length === 0) {
+                console.log(`[${batchId}] Nenhum array encontrado, resposta inesperada:`, Object.keys(data || {}));
+                results = [];
+            }
+        } else {
+            console.error(`[${batchId}] Resposta indica erro:`, data);
+            throw new Error(data.message || 'Formato de resposta inválido da API');
+        }
+        
+        // Validar que todos os itens têm pelo menos um IMEI
+        const validResults = results.filter(item => {
+            if (!item || typeof item !== 'object') {
+                console.warn(`[${batchId}] Item inválido encontrado:`, item);
+                return false;
+            }
+            if (!item.imei) {
+                console.warn(`[${batchId}] Item sem IMEI encontrado:`, item);
+                return false;
+            }
+            return true;
+        });
+        
+        if (validResults.length !== results.length) {
+            console.warn(`[${batchId}] ${results.length - validResults.length} itens inválidos foram filtrados`);
+        }
+        
+        console.log(`[${batchId}] Parse finalizado: ${validResults.length} resultados válidos`);
+        return validResults;
+        
+    } catch (error) {
+        console.error(`[${batchId}] Erro no parse da resposta:`, error);
+        console.error(`[${batchId}] Dados originais:`, data);
+        return []; // Retornar array vazio em vez de quebrar tudo
+    }
 }
 
 // Get authentication token
@@ -641,6 +851,230 @@ async function generateMD5(str) {
     });
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Gerar relatório detalhado de processamento
+function generateProcessingReport(requestedImeis, processedResults, failedBatches, individualProcessingStats = {}) {
+    const processedImeis = processedResults.map(device => device.imei);
+    const missingImeis = requestedImeis.filter(imei => !processedImeis.includes(imei));
+    
+    console.log('\n📊 RELATÓRIO DE PROCESSAMENTO:');
+    console.log(`   Total solicitado: ${requestedImeis.length} IMEIs`);
+    console.log(`   Processados com sucesso: ${processedImeis.length} IMEIs`);
+    console.log(`   Não encontrados/falharam: ${missingImeis.length} IMEIs`);
+    console.log(`   Lotes com falha: ${failedBatches}`);
+    console.log(`   Taxa de sucesso: ${Math.round((processedImeis.length / requestedImeis.length) * 100)}%`);
+    
+    // Mostrar estatísticas de processamento individual se disponível
+    if (individualProcessingStats.attempted > 0) {
+        console.log('\n🔄 PROCESSAMENTO INDIVIDUAL:');
+        console.log(`   IMEIs tentados individualmente: ${individualProcessingStats.attempted}`);
+        console.log(`   Recuperados com sucesso: ${individualProcessingStats.recovered}`);
+        console.log(`   Taxa de recuperação: ${Math.round((individualProcessingStats.recovered / individualProcessingStats.attempted) * 100)}%`);
+    }
+    
+    if (missingImeis.length > 0) {
+        console.log('\n❌ IMEIs não processados:');
+        missingImeis.forEach((imei, index) => {
+            console.log(`   ${index + 1}. ${imei}`);
+        });
+        
+        // Verificar padrões nos IMEIs que falharam
+        const failedPatterns = {};
+        missingImeis.forEach(imei => {
+            const prefix = imei.substring(0, 6);
+            failedPatterns[prefix] = (failedPatterns[prefix] || 0) + 1;
+        });
+        
+        if (Object.keys(failedPatterns).length > 1) {
+            console.log('\n🔍 Padrões nos IMEIs não processados:');
+            Object.entries(failedPatterns).forEach(([prefix, count]) => {
+                console.log(`   ${prefix}***: ${count} IMEIs`);
+            });
+        }
+        
+        // Sugestão para o usuário
+        if (missingImeis.length > 0) {
+            console.log('\n💡 SUGESTÃO:');
+            console.log('   Tente processar os IMEIs não encontrados individualmente na interface.');
+            console.log('   Alguns IMEIs podem estar temporariamente indisponíveis na API.');
+            
+            // Mostrar botão para reprocessar IMEIs falhados
+            showRetryFailedButton(missingImeis);
+        }
+    }
+    
+    if (processedImeis.length > 0) {
+        console.log('\n✅ IMEIs processados com sucesso:');
+        processedImeis.slice(0, 10).forEach((imei, index) => {
+            console.log(`   ${index + 1}. ${imei}`);
+        });
+        if (processedImeis.length > 10) {
+            console.log(`   ... e mais ${processedImeis.length - 10} IMEIs`);
+        }
+    }
+    
+    // Salvar relatório no sessionStorage para possível exportação
+    const report = {
+        timestamp: new Date().toISOString(),
+        requested: requestedImeis,
+        processed: processedImeis,
+        missing: missingImeis,
+        failedBatches: failedBatches,
+        successRate: Math.round((processedImeis.length / requestedImeis.length) * 100),
+        individualProcessing: individualProcessingStats
+    };
+    
+    try {
+        sessionStorage.setItem('lastProcessingReport', JSON.stringify(report));
+    } catch (e) {
+        console.warn('Não foi possível salvar relatório no sessionStorage:', e);
+    }
+}
+
+// Show button to retry failed IMEIs
+function showRetryFailedButton(failedImeis) {
+    // Find or create the retry button container
+    let retryContainer = document.getElementById('retryFailedContainer');
+    if (!retryContainer) {
+        retryContainer = document.createElement('div');
+        retryContainer.id = 'retryFailedContainer';
+        retryContainer.className = 'retry-container';
+        retryContainer.innerHTML = `
+            <div class="retry-info">
+                <h4><i class="fas fa-exclamation-triangle"></i> IMEIs Não Processados</h4>
+                <p>${failedImeis.length} IMEIs não foram encontrados no processamento em lote.</p>
+                <button id="retryFailedBtn" class="btn btn-warning">
+                    <i class="fas fa-redo"></i> Tentar Novamente (Individual)
+                </button>
+                <button id="copyFailedBtn" class="btn btn-secondary">
+                    <i class="fas fa-copy"></i> Copiar Lista
+                </button>
+            </div>
+        `;
+        
+        // Add after results section
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection) {
+            resultsSection.appendChild(retryContainer);
+        }
+    } else {
+        // Update existing container
+        const infoText = retryContainer.querySelector('.retry-info p');
+        if (infoText) {
+            infoText.textContent = `${failedImeis.length} IMEIs não foram encontrados no processamento em lote.`;
+        }
+    }
+    
+    // Add event listeners
+    const retryBtn = document.getElementById('retryFailedBtn');
+    const copyBtn = document.getElementById('copyFailedBtn');
+    
+    if (retryBtn) {
+        retryBtn.onclick = () => retryFailedImeis(failedImeis);
+    }
+    
+    if (copyBtn) {
+        copyBtn.onclick = () => copyFailedImeis(failedImeis);
+    }
+}
+
+// Retry failed IMEIs individually
+async function retryFailedImeis(failedImeis) {
+    if (!failedImeis || failedImeis.length === 0) {
+        showToast('Aviso', 'Nenhum IMEI para reprocessar', 'warning');
+        return;
+    }
+    
+    console.log(`🔄 Iniciando reprocessamento de ${failedImeis.length} IMEIs falhados...`);
+    showToast('Reprocessando', `Tentando reprocessar ${failedImeis.length} IMEIs individualmente...`, 'info');
+    
+    // Disable the retry button to prevent double-clicking
+    const retryBtn = document.getElementById('retryFailedBtn');
+    if (retryBtn) {
+        retryBtn.disabled = true;
+        retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+    }
+    
+    try {
+        const recoveredResults = await processIndividualImeis(failedImeis, 'Retry');
+        
+        if (recoveredResults.length > 0) {
+            // Add recovered results to existing results
+            deviceResults.push(...recoveredResults);
+            
+            // Process the new results
+            recoveredResults.forEach(device => {
+                // Extract firmware version
+                device.firmwareVersion = extractFirmwareVersion(device);
+                
+                // Calculate offline status and days
+                const offlineInfo = calculateOfflineStatus(device.lastTime);
+                device.isOnline = offlineInfo.isOnline;
+                device.offlineDays = offlineInfo.offlineDays;
+                device.lastTimeBrasilia = offlineInfo.lastTimeBrasilia;
+                
+                // Parse additional info from selfCheckParam
+                device.parsedSelfCheck = parseSelfCheckParam(device.selfCheckParam);
+                
+                // Extract SD card information
+                device.sdCardInfo = extractSDCardInfo(device.log);
+                
+                // Extract additional system information
+                device.systemInfo = extractSystemInfo(device.log);
+            });
+            
+            // Update the display
+            displayResults(deviceResults);
+            
+            // Update firmware comparison
+            if (typeof updateFirmwareComparison === 'function') {
+                updateFirmwareComparison();
+            }
+            
+            console.log(`✅ Reprocessamento concluído: ${recoveredResults.length}/${failedImeis.length} IMEIs recuperados`);
+            showToast('Sucesso', `${recoveredResults.length} IMEIs recuperados no reprocessamento!`, 'success');
+            
+            // Update the retry button info
+            const stillFailedImeis = failedImeis.filter(imei => 
+                !recoveredResults.some(result => result.imei === imei)
+            );
+            
+            if (stillFailedImeis.length > 0) {
+                showRetryFailedButton(stillFailedImeis);
+            } else {
+                // Hide retry container if all IMEIs were recovered
+                const retryContainer = document.getElementById('retryFailedContainer');
+                if (retryContainer) {
+                    retryContainer.style.display = 'none';
+                }
+            }
+        } else {
+            console.log('❌ Nenhum IMEI foi recuperado no reprocessamento');
+            showToast('Sem Sucesso', 'Nenhum IMEI adicional foi encontrado', 'warning');
+        }
+    } catch (error) {
+        console.error('Erro no reprocessamento:', error);
+        showToast('Erro', 'Erro no reprocessamento: ' + error.message, 'error');
+    } finally {
+        // Re-enable the retry button
+        if (retryBtn) {
+            retryBtn.disabled = false;
+            retryBtn.innerHTML = '<i class="fas fa-redo"></i> Tentar Novamente (Individual)';
+        }
+    }
+}
+
+// Copy failed IMEIs to clipboard
+async function copyFailedImeis(failedImeis) {
+    try {
+        const text = failedImeis.join('\n');
+        await navigator.clipboard.writeText(text);
+        showToast('Copiado', `${failedImeis.length} IMEIs copiados para a área de transferência`, 'success');
+    } catch (error) {
+        console.error('Erro ao copiar:', error);
+        showToast('Erro', 'Erro ao copiar IMEIs', 'error');
+    }
 }
 
 // Process and enhance results
@@ -681,6 +1115,42 @@ function extractFirmwareVersion(device) {
         if (versionMatch) {
             return versionMatch[1].trim();
         }
+    }
+    
+    // Robust search: scan all fields in the JSON for anything starting with "C450"
+    try {
+        const firmwarePattern = /C450[a-zA-Z]*[_-]?v?\d+\.\d+\.\d+[_-]?\d*/i;
+        
+        // Search through all object properties recursively
+        function searchForFirmware(obj, depth = 0) {
+            if (depth > 3) return null; // Prevent infinite recursion
+            
+            if (!obj || typeof obj !== 'object') return null;
+            
+            for (const [key, value] of Object.entries(obj)) {
+                if (typeof value === 'string' && firmwarePattern.test(value)) {
+                    console.log(`🔍 Firmware encontrado em '${key}':`, value);
+                    return value.trim();
+                }
+                
+                // Recursively search nested objects
+                if (typeof value === 'object' && value !== null) {
+                    const nested = searchForFirmware(value, depth + 1);
+                    if (nested) return nested;
+                }
+            }
+            
+            return null;
+        }
+        
+        const foundFirmware = searchForFirmware(device);
+        if (foundFirmware) {
+            console.log(`✅ Firmware encontrado via busca robusta:`, foundFirmware);
+            return foundFirmware;
+        }
+        
+    } catch (error) {
+        console.warn('⚠️ Erro na busca robusta de firmware:', error);
     }
     
     return 'Não disponível';
@@ -936,6 +1406,65 @@ function showResults() {
 // Hide results section
 function hideResults() {
     resultsSection.classList.add('hidden');
+}
+
+// Mostrar relatório de processamento detalhado
+function showProcessingReport() {
+    try {
+        const reportData = sessionStorage.getItem('lastProcessingReport');
+        if (!reportData) {
+            showToast('Aviso', 'Nenhum relatório de processamento disponível.', 'warning');
+            return;
+        }
+        
+        const report = JSON.parse(reportData);
+        const reportTime = new Date(report.timestamp).toLocaleString('pt-BR');
+        
+        let reportHtml = `
+            <div class="processing-report">
+                <h3><i class="fas fa-chart-bar"></i> Relatório de Processamento</h3>
+                <p class="report-timestamp">Gerado em: ${reportTime}</p>
+                
+                <div class="report-summary">
+                    <div class="summary-item">
+                        <span class="label">Total solicitado:</span>
+                        <span class="value">${report.requested.length} IMEIs</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Processados:</span>
+                        <span class="value success">${report.processed.length} IMEIs</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Não encontrados:</span>
+                        <span class="value error">${report.missing.length} IMEIs</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Taxa de sucesso:</span>
+                        <span class="value">${report.successRate}%</span>
+                    </div>
+                </div>
+        `;
+        
+        if (report.missing.length > 0) {
+            reportHtml += `
+                <div class="missing-imeis">
+                    <h4><i class="fas fa-exclamation-triangle"></i> IMEIs não processados:</h4>
+                    <div class="imei-list">
+                        ${report.missing.map(imei => `<span class="imei-item">${imei}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        reportHtml += `</div>`;
+        
+        // Mostrar em modal
+        showModal('Relatório de Processamento', reportHtml);
+        
+    } catch (error) {
+        console.error('Erro ao mostrar relatório:', error);
+        showToast('Erro', 'Erro ao carregar relatório de processamento.', 'error');
+    }
 }
 
 // Update results summary
@@ -1313,6 +1842,18 @@ function showDeviceDetails(imei) {
         ` : ''}
     `;
     
+    // Verificar se há modal de firmware aberto e ajustar z-index
+    const firmwareModal = document.getElementById('firmwareModal');
+    if (firmwareModal && firmwareModal.classList.contains('show')) {
+        // Se modal de firmware está aberto, usar z-index maior e classe especial
+        deviceModal.style.zIndex = '2100';
+        deviceModal.classList.add('overlay-modal');
+    } else {
+        // Usar z-index padrão e remover classe especial
+        deviceModal.style.zIndex = '1000';
+        deviceModal.classList.remove('overlay-modal');
+    }
+    
     deviceModal.classList.remove('hidden');
 }
 
@@ -1320,6 +1861,16 @@ function showDeviceDetails(imei) {
 function hideModal() {
     console.log('🚫 Escondendo modal');
     deviceModal.classList.add('hidden');
+    // Resetar z-index e remover classe especial ao fechar
+    deviceModal.style.zIndex = '1000';
+    deviceModal.classList.remove('overlay-modal');
+}
+
+// Função global para fechar modal de firmware
+function closeFirmwareModal() {
+    if (typeof dashboardManager !== 'undefined') {
+        dashboardManager.closeFirmwareModal();
+    }
 }
 
 // Toast notification system
@@ -1633,6 +2184,59 @@ async function queryDeviceStatusWithPerformance(imeis) {
         
         throw error;
     }
+}
+
+// Process individual IMEIs when batch processing fails
+async function processIndividualImeis(imeis, batchNumber) {
+    const results = [];
+    const maxConcurrent = 3; // Process max 3 at once to avoid overwhelming API
+    
+    console.log(`[Lote ${batchNumber}] Iniciando processamento individual de ${imeis.length} IMEIs`);
+    
+    // Process IMEIs in small groups to avoid overwhelming the API
+    for (let i = 0; i < imeis.length; i += maxConcurrent) {
+        const group = imeis.slice(i, i + maxConcurrent);
+        const groupPromises = group.map(async (imei, index) => {
+            try {
+                // Wait a bit between individual requests
+                if (index > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                console.log(`[Lote ${batchNumber}] Processando individualmente: ${imei}`);
+                const result = await queryDeviceStatus([imei]); // Process as single item array
+                
+                if (result && result.length > 0) {
+                    console.log(`[Lote ${batchNumber}] ✅ Sucesso individual: ${imei}`);
+                    return result[0]; // Return the single result
+                } else {
+                    console.log(`[Lote ${batchNumber}] ❌ Não encontrado individual: ${imei}`);
+                    return null;
+                }
+            } catch (error) {
+                console.error(`[Lote ${batchNumber}] ❌ Erro individual ${imei}:`, error.message);
+                return null;
+            }
+        });
+        
+        // Wait for this group to complete
+        const groupResults = await Promise.all(groupPromises);
+        
+        // Add valid results
+        groupResults.forEach(result => {
+            if (result) {
+                results.push(result);
+            }
+        });
+        
+        // Wait between groups
+        if (i + maxConcurrent < imeis.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    
+    console.log(`[Lote ${batchNumber}] Processamento individual finalizado: ${results.length}/${imeis.length} sucessos`);
+    return results;
 }
 
 // Enhanced results display with caching

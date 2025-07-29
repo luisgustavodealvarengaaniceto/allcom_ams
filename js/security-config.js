@@ -26,7 +26,7 @@ const securityConfig = {
                                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
                                    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
                                    "img-src 'self' data:; " +
-                                   "connect-src 'self' https://fota-api.jimicloud.com;",
+                                   "connect-src 'self' http://fota-api.jimicloud.com https://fota-api.jimicloud.com;",
         'Referrer-Policy': 'strict-origin-when-cross-origin',
         'Permissions-Policy': 'camera=(), microphone=(), geolocation=()' // Restringir permissões
     },

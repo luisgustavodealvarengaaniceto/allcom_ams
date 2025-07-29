@@ -238,15 +238,15 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
             console.log('Proxy: Todos os métodos de token falharam, tentando método MD5 como fallback');
             
             const timestamp = Date.now();
-            const signString = `${API_CONFIG.appKey}${timestamp}${API_CONFIG.secret}`;
+            const signString = `${CONFIG.JIMICLOUD_APP_KEY}${timestamp}${CONFIG.JIMICLOUD_SECRET}`;
             const sign = generateMD5(signString);
             
-            response = await fetch(`${API_CONFIG.endpoint}/queryDeviceStatus`, {
+            response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'appkey': API_CONFIG.appKey,
+                    'appkey': CONFIG.JIMICLOUD_APP_KEY,
                     'timestamp': timestamp.toString(),
                     'sign': sign
                 },
@@ -260,11 +260,11 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
             console.log('Proxy: MD5 falhou, tentando query parameters');
             
             const timestamp = Date.now();
-            const signString = `${API_CONFIG.appKey}${timestamp}${API_CONFIG.secret}`;
+            const signString = `${CONFIG.JIMICLOUD_APP_KEY}${timestamp}${CONFIG.JIMICLOUD_SECRET}`;
             const sign = generateMD5(signString);
             
-            const url = new URL(`${API_CONFIG.endpoint}/queryDeviceStatus`);
-            url.searchParams.append('appkey', API_CONFIG.appKey);
+            const url = new URL(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`);
+            url.searchParams.append('appkey', CONFIG.JIMICLOUD_APP_KEY);
             url.searchParams.append('timestamp', timestamp.toString());
             url.searchParams.append('sign', sign);
             
@@ -287,6 +287,17 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
         
         const data = await response.json();
         console.log('Proxy: Resposta recebida da API JimiCloud:', data);
+        
+        // Check if the API returned an error in the response body
+        if (data.code && data.code !== 0) {
+            console.error('Proxy: API retornou erro:', data);
+            return res.status(500).json({
+                error: 'Erro da API JimiCloud',
+                message: data.msg || 'Erro desconhecido da API',
+                details: data,
+                code: data.code
+            });
+        }
         
         res.json(data);
         
