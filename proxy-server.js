@@ -332,7 +332,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Proxy servidor funcionando' });
 });
 
-app.listen(PORT, HOST, () => {
+app.listen(PORT, '0.0.0.0', () => {
     const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
     const isProd = process.env.NODE_ENV === 'production';
     
