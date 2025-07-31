@@ -110,8 +110,7 @@ class BatchManager {
 // Performance Manager - Sistema completo de gerenciamento de performance
 class PerformanceManager {
     constructor() {
-        // Circuit breaker mais permissivo para o contexto de consulta de IMEI
-        this.circuitBreaker = new CircuitBreaker(10, 300000); // 10 falhas, 5 minutos timeout
+        this.circuitBreaker = new CircuitBreaker();
         this.batchManager = new BatchManager();
         this.stats = {
             totalRequests: 0,
@@ -121,7 +120,7 @@ class PerformanceManager {
             lastReset: Date.now()
         };
         
-        console.log('✅ Performance Manager initialized with relaxed circuit breaker (10 failures, 5min timeout)');
+        console.log('✅ Performance Manager initialized');
     }
 
     // Check if can make request (circuit breaker)

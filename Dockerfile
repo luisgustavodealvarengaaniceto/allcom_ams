@@ -6,6 +6,6 @@ COPY . .
 
 RUN npm install
 
-EXPOSE 80
+EXPOSE 1212
 
 CMD ["node", "proxy-server.js"]

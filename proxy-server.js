@@ -16,8 +16,8 @@ try {
 }
 
 const app = express();
-const PORT = process.env.PORT || 80;
-const HOST = process.env.HOST || 'localhost';
+const PORT = process.env.PORT || 1212;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Configuration from environment variables
 const CONFIG = {
@@ -27,8 +27,7 @@ const CONFIG = {
     API_TIMEOUT: parseInt(process.env.API_TIMEOUT) || 30000,
     MAX_BATCH_SIZE: parseInt(process.env.API_MAX_BATCH_SIZE) || 100,
     CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
-    ENABLE_DEBUG_LOGS: process.env.ENABLE_DEBUG_LOGS === 'true',
-    proxyEndpoint: '/api'
+    ENABLE_DEBUG_LOGS: process.env.ENABLE_DEBUG_LOGS === 'true'
 };
 
 // Log configuration on startup
@@ -333,7 +332,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Proxy servidor funcionando' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, HOST, () => {
     const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
     const isProd = process.env.NODE_ENV === 'production';
     

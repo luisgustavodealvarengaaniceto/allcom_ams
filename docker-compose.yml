@@ -1,8 +1,27 @@
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   allcom-jc450:
     build: .
     container_name: allcom-jc450
-    ports:
-      - "80:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.allcom.rule=Host(`allcom.jimibrasil.com.br`)"
+      - "traefik.http.services.allcom.loadbalancer.server.port=1212"
     environment:
       - NODE_ENV=production
+    expose:
+      - "1212"
+    ports:
+      - "1212:1212"
