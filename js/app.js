@@ -608,113 +608,18 @@ function createBatches(imeis, batchSize) {
 async function queryDeviceStatus(imeiList, retries = 2) {
     const batchId = Math.random().toString(36).substr(2, 9);
     console.log(`[${batchId}] Consultando ${imeiList.length} IMEIs:`, imeiList.slice(0, 3).join(', ') + (imeiList.length > 3 ? '...' : ''));
-    
-    let partialResults = [];
-    let lastError = null;
-    
-    // First try to use local proxy server
+
+    // Sempre tente apenas via proxy
     try {
         console.log(`[${batchId}] Tentando usar servidor proxy local...`);
         const results = await queryWithProxy(imeiList, batchId);
         console.log(`[${batchId}] Sucesso via proxy: ${results.length} resultados retornados`);
         return results;
     } catch (proxyError) {
-        console.log(`[${batchId}] Proxy indisponível, tentando acesso direto:`, proxyError.message);
-        lastError = proxyError;
+        console.error(`[${batchId}] Proxy indisponível ou erro:`, proxyError.message);
+        // Não tente acesso direto, apenas retorne erro amigável
+        throw new Error('Falha ao consultar a API via proxy. Verifique se o servidor está online.');
     }
-    
-    // Fallback to direct API access
-    for (let attempt = 1; attempt <= retries + 1; attempt++) {
-        try {
-            const authData = await getAuthToken();
-            
-            // Create abort controller for timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
-            
-            const requestOptions = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache',
-                    'appkey': authData.appkey,
-                    'timestamp': authData.timestamp,
-                    'sign': authData.sign
-                },
-                body: JSON.stringify({ imeiList }),
-                signal: controller.signal,
-                mode: 'cors', // Explicitly set CORS mode
-                credentials: 'omit' // Don't send credentials
-            };
-            
-            console.log(`[${batchId}] Tentativa ${attempt} - acesso direto à API`);
-            const response = await fetch(`${API_CONFIG.endpoint}/queryDeviceStatus`, requestOptions);
-            
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            const results = parseApiResponse(data, batchId);
-            
-            console.log(`[${batchId}] Sucesso direto: ${results.length} resultados retornados de ${imeiList.length} solicitados`);
-            
-            // Log IMEIs que não retornaram dados
-            if (results.length < imeiList.length) {
-                const returnedImeis = results.map(r => r.imei);
-                const missingImeis = imeiList.filter(imei => !returnedImeis.includes(imei));
-                console.warn(`[${batchId}] IMEIs não encontrados na resposta (${missingImeis.length}):`, missingImeis);
-            }
-            
-            return results;
-            
-        } catch (error) {
-            console.error(`[${batchId}] Tentativa ${attempt} falhou:`, error.message);
-            lastError = error;
-            
-            if (error.name === 'AbortError') {
-                console.error(`[${batchId}] Timeout na requisição`);
-                if (attempt <= retries) {
-                    console.log(`[${batchId}] Tentando novamente em 2 segundos...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    continue;
-                }
-            }
-            
-            if (error.name === 'TypeError' && 
-                (error.message.includes('fetch') || 
-                 error.message.includes('Failed to fetch') ||
-                 error.message.includes('CORS'))) {
-                
-                if (attempt <= retries) {
-                    console.log(`[${batchId}] Tentando novamente devido a erro de rede/CORS...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                    continue;
-                }
-            }
-            
-            // For HTTP errors or other errors, retry with exponential backoff
-            if (attempt <= retries) {
-                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Max 5 seconds
-                console.log(`[${batchId}] Aguardando ${delay}ms antes da próxima tentativa...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                continue;
-            }
-        }
-    }
-    
-    // Se chegou aqui, todas as tentativas falharam
-    // Criar erro personalizado com resultados parciais se houver
-    const errorWithPartial = new Error(lastError?.message || 'Falha em todas as tentativas de consulta');
-    if (partialResults.length > 0) {
-        errorWithPartial.partialResults = partialResults;
-        console.log(`[${batchId}] Retornando ${partialResults.length} resultados parciais devido a erro`);
-    }
-    
-    throw errorWithPartial;
 }
 
 // Query using local proxy server
