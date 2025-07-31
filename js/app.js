@@ -7,7 +7,7 @@ if (window.allcomAppInitialized) {
 // API Configuration
 const API_CONFIG = {
     endpoint: 'http://fota-api.jimicloud.com', // HTTPS para produção
-    proxyEndpoint: 'http://localhost:3001/api', // HTTPS para proxy
+    proxyEndpoint: '/api',
     appKey: 'Jimiiotbrasil',
     secret: '23dd6cca658b4ec298aeb7beb4972fd4',
     maxBatchSize: 15 // Reduzido de 99 para 15 devido a limite da API JimiCloud
@@ -1883,6 +1883,7 @@ function showToast(title, message, type = 'info', duration = 5000) {
         error: 'fa-exclamation-circle',
         warning: 'fa-exclamation-triangle',
         info: 'fa-info-circle'
+   
     }[type] || 'fa-info-circle';
     
     toast.innerHTML = `

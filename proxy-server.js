@@ -27,7 +27,8 @@ const CONFIG = {
     API_TIMEOUT: parseInt(process.env.API_TIMEOUT) || 30000,
     MAX_BATCH_SIZE: parseInt(process.env.API_MAX_BATCH_SIZE) || 100,
     CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
-    ENABLE_DEBUG_LOGS: process.env.ENABLE_DEBUG_LOGS === 'true'
+    ENABLE_DEBUG_LOGS: process.env.ENABLE_DEBUG_LOGS === 'true',
+    proxyEndpoint: '/api'
 };
 
 // Log configuration on startup
