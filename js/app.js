@@ -1,6 +1,6 @@
 // Prevent multiple initialization
 if (window.allcomAppInitialized) {
-    console.log('⚠️ Allcom App já inicializado, evitando duplicação');
+    // Evitar duplicação de inicialização
 } else {
     window.allcomAppInitialized = true;
 
@@ -13,15 +13,24 @@ const API_CONFIG = {
     maxBatchSize: 99
 };
 
-console.log('🔧 API_CONFIG carregado (com logs detalhados):');
-console.log('  - endpoint:', API_CONFIG.endpoint);
-console.log('  - proxyEndpoint:', API_CONFIG.proxyEndpoint);
-console.log('  - appKey:', API_CONFIG.appKey);
-console.log('  - secret length:', API_CONFIG.secret ? API_CONFIG.secret.length : 'undefined');
-console.log('  - maxBatchSize:', API_CONFIG.maxBatchSize);
-console.log('  - window.location:', window.location.href);
-console.log('  - protocol:', window.location.protocol);
-console.log('  - host:', window.location.host);
+// Server-side logging function
+async function serverLog(level, message, data = null) {
+    try {
+        await fetch('/api/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                level,
+                message,
+                data,
+                timestamp: new Date().toISOString(),
+                url: window.location.href
+            })
+        });
+    } catch (error) {
+        // Silently fail to avoid console pollution
+    }
+}
 
 // Global state
 let deviceResults = [];
@@ -74,34 +83,15 @@ const selectedFirmwareText = document.getElementById('selectedFirmwareText');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM carregado, inicializando app...');
-    
-    // DIAGNOSTIC: Verificar se API_CONFIG foi alterado
-    console.log('🔍 VERIFICAÇÃO API_CONFIG INICIAL:');
-    console.log('  - endpoint:', API_CONFIG.endpoint);
-    console.log('  - proxyEndpoint:', API_CONFIG.proxyEndpoint);
-    console.log('  - typeof API_CONFIG:', typeof API_CONFIG);
-    console.log('  - JSON.stringify:', JSON.stringify(API_CONFIG, null, 2));
-    
-    // Check if there's any environment override
-    if (typeof process !== 'undefined' && process.env) {
-        console.log('🔍 PROCESS.ENV detectado:', process.env);
-    }
-    
-    // Check window variables that might affect config
-    console.log('🔍 WINDOW VARIABLES:');
-    console.log('  - window.location.href:', window.location.href);
-    console.log('  - window.location.protocol:', window.location.protocol);
-    console.log('  - window.location.host:', window.location.host);
-    console.log('  - window.location.port:', window.location.port);
+    serverLog('info', 'DOM carregado, inicializando app', {
+        location: window.location.href,
+        protocol: window.location.protocol,
+        host: window.location.host,
+        port: window.location.port
+    });
     
     // Check initial modal state
     const initialModal = document.getElementById('deviceModal');
-    console.log('🔍 Estado inicial do modal:', {
-        exists: !!initialModal,
-        classes: initialModal ? Array.from(initialModal.classList) : 'N/A',
-        isHidden: initialModal ? initialModal.classList.contains('hidden') : 'N/A'
-    });
     
     initializeManagers();
     setupEventListeners();
@@ -113,60 +103,31 @@ function initializeManagers() {
     try {
         // Check if all required classes are available
         if (typeof CacheManager === 'undefined') {
-            console.error('❌ CacheManager not loaded');
             setTimeout(initializeManagers, 100);
             return;
         }
         
-        if (typeof PerformanceManager === 'undefined') {
-            console.error('❌ PerformanceManager not loaded');
-            setTimeout(initializeManagers, 100);
-            return;
-        }
-        
-        if (typeof DashboardManager === 'undefined') {
-            console.error('❌ DashboardManager not loaded');
-            setTimeout(initializeManagers, 100);
-            return;
-        }
-        
-        if (typeof ExportManager === 'undefined') {
-            console.error('❌ ExportManager not loaded');
-            setTimeout(initializeManagers, 100);
-            return;
-        }
-        
-        if (typeof FirmwareManager === 'undefined') {
-            console.error('❌ FirmwareManager not loaded');
+        if (typeof PerformanceManager === 'undefined' ||
+            typeof DashboardManager === 'undefined' ||
+            typeof ExportManager === 'undefined' ||
+            typeof FirmwareManager === 'undefined') {
             setTimeout(initializeManagers, 100);
             return;
         }
         
         // Avoid re-initialization if already done
         if (window.cacheManager && cacheManager) {
-            console.log('⚠️ Managers already initialized, skipping...');
             return;
         }
         
         // Initialize managers in correct order
-        console.log('🔄 Inicializando managers...');
-        
         window.cacheManager = cacheManager = new CacheManager();
-        console.log('✅ CacheManager inicializado');
-        
         window.performanceManager = performanceManager = new PerformanceManager();
-        console.log('✅ PerformanceManager inicializado');
-        
         window.dashboardManager = dashboardManager = new DashboardManager();
-        console.log('✅ DashboardManager inicializado');
-        
         window.exportManager = exportManager = new ExportManager();
-        console.log('✅ ExportManager inicializado');
-        
         window.firmwareManager = firmwareManager = new FirmwareManager();
-        console.log('✅ FirmwareManager inicializado');
         
-        console.log('✅ Todos os managers criados e expostos globalmente');
+        serverLog('info', 'Todos os managers inicializados com sucesso');
         
         // Wait a tick for managers to be fully ready
         setTimeout(() => {
@@ -178,31 +139,23 @@ function initializeManagers() {
                 // Initialize firmware interface
                 initializeFirmwareInterface();
                 
-                console.log('✅ Sistema completamente inicializado com firmware management');
-                
                 // Ensure modal is hidden on startup
                 const modal = document.getElementById('deviceModal');
                 if (modal && !modal.classList.contains('hidden')) {
-                    console.log('⚠️ Modal estava visível, forçando esconder...');
                     modal.classList.add('hidden');
                 }
-                console.log('🔍 Estado final do modal:', {
-                    exists: !!modal,
-                    classes: modal ? Array.from(modal.classList) : 'N/A',
-                    isHidden: modal ? modal.classList.contains('hidden') : 'N/A'
-                });
+                
+                serverLog('info', 'Sistema completamente inicializado');
             } catch (error) {
-                console.error('❌ Erro na inicialização final:', error);
+                serverLog('error', 'Erro na inicialização final', { error: error.message });
             }
         }, 50);
         
-        console.log('✅ All managers initialized successfully with firmware management');
     } catch (error) {
-        console.error('❌ Error initializing managers:', error);
+        serverLog('error', 'Erro ao inicializar managers', { error: error.message });
         try {
             showToast('Erro ao inicializar sistema', 'error');
         } catch (toastError) {
-            console.error('Toast also failed:', toastError);
             alert('Erro ao inicializar sistema. Recarregue a página.');
         }
     }
@@ -367,7 +320,6 @@ function loadImeisFromText(content, fileName) {
                 imeis.push(cleanLine);
                 validCount++;
             } else {
-                console.warn(`Linha ${index + 1}: IMEI inválido "${line.trim()}"`);
                 invalidCount++;
             }
         }
@@ -391,6 +343,7 @@ function loadImeisFromText(content, fileName) {
     if (invalidCount > 0) message += `, ${invalidCount} inválidos ignorados`;
     if (duplicatesRemoved > 0) message += `, ${duplicatesRemoved} duplicatas removidas`;
     
+    serverLog('info', 'Arquivo IMEI carregado', { fileName, validCount, invalidCount, duplicatesRemoved });
     showToast('Arquivo Carregado', message, validCount > 0 ? 'success' : 'warning');
     
     // Clear file input
@@ -441,7 +394,7 @@ async function handleConsultar() {
                 updateProgress(progressAfterBatch, `Lote ${i + 1}/${batches.length} concluído (${processedCount}/${imeis.length} IMEIs processados)`);
                 
             } catch (error) {
-                console.error(`Erro no lote ${i + 1}:`, error);
+                serverLog('error', `Erro no lote ${i + 1}`, { error: error.message, batchIndex: i });
                 showToast('Aviso', `Erro ao processar lote ${i + 1}: ${error.message}`, 'warning');
                 
                 // Continue with remaining batches even if one fails
@@ -478,7 +431,7 @@ async function handleConsultar() {
         showToast('Sucesso', summaryMessage, successCount > 0 ? 'success' : 'warning');
         
     } catch (error) {
-        console.error('Erro na consulta:', error);
+        serverLog('error', 'Erro na consulta principal', { error: error.message });
         hideLoading();
         showToast('Erro', `Erro durante a consulta: ${error.message}`, 'error');
     }
@@ -489,48 +442,44 @@ function createBatches(imeis, batchSize) {
     const batches = [];
     const totalImeis = imeis.length;
     
-    console.log(`Criando lotes para ${totalImeis} IMEIs com tamanho máximo de ${batchSize} por lote`);
+    serverLog('info', `Criando lotes para ${totalImeis} IMEIs`, { totalImeis, batchSize });
     
     for (let i = 0; i < totalImeis; i += batchSize) {
         const batch = imeis.slice(i, i + batchSize);
         batches.push(batch);
-        console.log(`Lote ${batches.length}: ${batch.length} IMEIs (${i + 1}-${Math.min(i + batch.length, totalImeis)})`);
     }
     
-    console.log(`Total de ${batches.length} lotes criados`);
+    serverLog('info', `Total de ${batches.length} lotes criados`);
     return batches;
 }
 
 // Query device status from API with CORS handling
 async function queryDeviceStatus(imeiList, retries = 2) {
     const batchId = Math.random().toString(36).substr(2, 9);
-    console.log(`[${batchId}] === INICIANDO CONSULTA ===`);
-    console.log(`[${batchId}] IMEIs: ${imeiList.length} - ${imeiList.slice(0, 3).join(', ')}${imeiList.length > 3 ? '...' : ''}`);
-    console.log(`[${batchId}] Retries configurados: ${retries}`);
+    
+    serverLog('info', 'Iniciando consulta de dispositivos', {
+        batchId,
+        imeiCount: imeiList.length,
+        imeis: imeiList.slice(0, 3),
+        retries
+    });
     
     // First try to use local proxy server
     try {
-        console.log(`[${batchId}] TENTATIVA 1: Servidor proxy local`);
         const results = await queryWithProxy(imeiList, batchId);
-        console.log(`[${batchId}] ✅ SUCESSO via proxy: ${results.length} resultados`);
+        serverLog('info', 'Sucesso via proxy', { batchId, resultCount: results.length });
         return results;
     } catch (proxyError) {
-        console.log(`[${batchId}] ❌ PROXY FALHOU:`, proxyError.message);
-        console.log(`[${batchId}] Erro completo do proxy:`, proxyError);
+        serverLog('warn', 'Proxy falhou, tentando acesso direto', {
+            batchId,
+            error: proxyError.message
+        });
     }
     
     // Fallback to direct API access
-    console.log(`[${batchId}] TENTATIVA 2: Acesso direto à API`);
     for (let attempt = 1; attempt <= retries + 1; attempt++) {
         try {
-            console.log(`[${batchId}] Tentativa direta ${attempt}/${retries + 1}`);
-            
             const authData = getAuthToken();
-            console.log(`[${batchId}] Token gerado:`, {
-                appkey: authData.appkey,
-                timestamp: authData.timestamp,
-                sign: authData.sign ? authData.sign.substring(0, 8) + '...' : 'undefined'
-            });
             
             // Create abort controller for timeout
             const controller = new AbortController();
@@ -553,8 +502,13 @@ async function queryDeviceStatus(imeiList, retries = 2) {
             };
             
             const apiUrl = `${API_CONFIG.endpoint}/queryDeviceStatus`;
-            console.log(`[${batchId}] URL da API: ${apiUrl}`);
-            console.log(`[${batchId}] Headers:`, requestOptions.headers);
+            
+            serverLog('info', 'Tentativa de acesso direto à API', {
+                batchId,
+                attempt,
+                apiUrl,
+                tokenGenerated: !!authData.sign
+            });
             
             const response = await fetch(apiUrl, requestOptions);
             
@@ -567,16 +521,19 @@ async function queryDeviceStatus(imeiList, retries = 2) {
             const data = await response.json();
             const results = parseApiResponse(data, batchId);
             
-            console.log(`[${batchId}] Sucesso direto: ${results.length} resultados retornados`);
+            serverLog('info', 'Sucesso no acesso direto', { batchId, resultCount: results.length });
             return results;
             
         } catch (error) {
-            console.error(`[${batchId}] Tentativa ${attempt} falhou:`, error.message);
+            serverLog('error', 'Falha na tentativa de acesso direto', {
+                batchId,
+                attempt,
+                error: error.message,
+                errorType: error.name
+            });
             
             if (error.name === 'AbortError') {
-                console.error(`[${batchId}] Timeout na requisição`);
                 if (attempt <= retries) {
-                    console.log(`[${batchId}] Tentando novamente em 2 segundos...`);
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     continue;
                 }
@@ -589,7 +546,6 @@ async function queryDeviceStatus(imeiList, retries = 2) {
                  error.message.includes('CORS'))) {
                 
                 if (attempt <= retries) {
-                    console.log(`[${batchId}] Tentando novamente devido a erro de rede/CORS...`);
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                     continue;
                 }
@@ -600,7 +556,6 @@ async function queryDeviceStatus(imeiList, retries = 2) {
             // For HTTP errors or other errors, retry with exponential backoff
             if (attempt <= retries) {
                 const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Max 5 seconds
-                console.log(`[${batchId}] Aguardando ${delay}ms antes da próxima tentativa...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
             }
@@ -616,14 +571,17 @@ async function queryWithProxy(imeiList, batchId) {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for proxy
     
     const proxyUrl = `${API_CONFIG.proxyEndpoint}/queryDeviceStatus`;
-    console.log('🌐 queryWithProxy - Detalhes completos:');
-    console.log('  - proxyUrl final:', proxyUrl);
-    console.log('  - API_CONFIG.proxyEndpoint:', API_CONFIG.proxyEndpoint);
-    console.log('  - window.location.origin:', window.location.origin);
-    console.log('  - window.location.host:', window.location.host);
-    console.log('  - window.location.port:', window.location.port);
-    console.log('  - batchId:', batchId);
-    console.log('  - imeiList length:', imeiList.length);
+    
+    serverLog('info', 'Tentando query via proxy', {
+        batchId,
+        proxyUrl,
+        imeiCount: imeiList.length,
+        windowLocation: {
+            origin: window.location.origin,
+            host: window.location.host,
+            port: window.location.port
+        }
+    });
     
     try {
         const response = await fetch(proxyUrl, {
@@ -672,7 +630,7 @@ function parseApiResponse(data, batchId) {
         results = data.devices;
     } else if (data && data.success !== false) {
         // If we get any object response that's not an error, log it and return empty array
-        console.log(`[${batchId}] Resposta inesperada:`, data);
+        serverLog('warn', 'Resposta inesperada da API', { batchId, data });
         results = [];
     } else {
         throw new Error(data.message || 'Formato de resposta inválido da API');
@@ -684,23 +642,19 @@ function parseApiResponse(data, batchId) {
 // Get authentication token
 function getAuthToken() {
     try {
-        console.log('🔐 getAuthToken - Iniciando geração do token');
-        console.log('  - API_CONFIG.appKey:', API_CONFIG.appKey);
-        console.log('  - API_CONFIG.secret length:', API_CONFIG.secret ? API_CONFIG.secret.length : 'undefined');
-        
         // For JimiCloud API, generate MD5 signature
         const timestamp = Date.now();
         const signString = `${API_CONFIG.appKey}${timestamp}${API_CONFIG.secret}`;
         
-        console.log('  - timestamp:', timestamp);
-        console.log('  - signString length:', signString.length);
-        console.log('  - signString preview:', signString.substring(0, 50) + '...');
-        
         // Simple MD5 implementation for browser
         const sign = generateMD5(signString);
         
-        console.log('  - sign gerado:', sign);
-        console.log('✅ Token gerado com sucesso');
+        serverLog('info', 'Token de autenticação gerado', {
+            appKey: API_CONFIG.appKey,
+            timestamp,
+            signStringLength: signString.length,
+            signGenerated: !!sign
+        });
         
         return {
             appkey: API_CONFIG.appKey,
@@ -708,20 +662,17 @@ function getAuthToken() {
             sign: sign
         };
     } catch (error) {
-        console.error('❌ Erro detalhado ao gerar token:', error);
-        console.error('  - error.name:', error.name);
-        console.error('  - error.message:', error.message);
-        console.error('  - error.stack:', error.stack);
+        serverLog('error', 'Erro ao gerar token de autenticação', {
+            error: error.message,
+            stack: error.stack
+        });
         throw new Error('Erro ao gerar token de autenticação: ' + error.message);
     }
 }
 
 // Simple MD5 hash function for browser - Pure JavaScript implementation
 function generateMD5(str) {
-    console.log('🔐 generateMD5 chamado com string length:', str ? str.length : 'undefined');
-    
     if (!str) {
-        console.error('❌ generateMD5: string vazia ou undefined');
         throw new Error('String para hash MD5 está vazia');
     }
     
@@ -776,11 +727,10 @@ function generateMD5(str) {
         }
         
         const result = md5(str);
-        console.log('✅ generateMD5 concluído, hash length:', result.length);
         return result;
         
     } catch (error) {
-        console.error('❌ Erro na função MD5:', error);
+        serverLog('error', 'Erro na função MD5', { error: error.message });
         throw error;
     }
 }
@@ -837,7 +787,6 @@ function extractFirmwareVersion(device) {
             
             for (const [key, value] of Object.entries(obj)) {
                 if (typeof value === 'string' && firmwarePattern.test(value)) {
-                    console.log(`🔍 Firmware encontrado em '${key}':`, value);
                     return value.trim();
                 }
                 
@@ -853,12 +802,11 @@ function extractFirmwareVersion(device) {
         
         const foundFirmware = searchForFirmware(device);
         if (foundFirmware) {
-            console.log(`✅ Firmware encontrado via busca robusta:`, foundFirmware);
             return foundFirmware;
         }
         
     } catch (error) {
-        console.warn('⚠️ Erro na busca robusta de firmware:', error);
+        // Erro na busca robusta, não registrar
     }
     
     return 'Não disponível';
@@ -904,7 +852,7 @@ function calculateOfflineStatus(lastTimeStr) {
             })
         };
     } catch (error) {
-        console.error('Erro ao processar data:', error);
+        serverLog('error', 'Erro ao processar data', { error: error.message });
         return {
             isOnline: false,
             offlineDays: 'Erro',
@@ -1220,11 +1168,9 @@ function applyFilters() {
 
 // Show device details in modal
 function showDeviceDetails(imei) {
-    console.log('🔍 Mostrando detalhes do dispositivo:', imei);
-    
     const device = deviceResults.find(d => d.imei === imei);
     if (!device) {
-        console.log('❌ Dispositivo não encontrado:', imei);
+        serverLog('error', 'Dispositivo não encontrado', { imei });
         return;
     }
     
@@ -1508,7 +1454,6 @@ function showDeviceDetails(imei) {
 
 // Hide modal
 function hideModal() {
-    console.log('🚫 Escondendo modal');
     deviceModal.classList.add('hidden');
     // Resetar z-index e remover classe especial ao fechar
     deviceModal.style.zIndex = '1000';

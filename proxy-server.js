@@ -327,6 +327,26 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
     }
 });
 
+// Logging endpoint for frontend
+app.post('/api/log', (req, res) => {
+    const { level, message, data, timestamp, url } = req.body;
+    
+    // Format log message for Docker logs
+    const logPrefix = `[FRONTEND-${level.toUpperCase()}]`;
+    const logMessage = `${logPrefix} ${timestamp} | ${message}`;
+    
+    // Log to console (will appear in Docker logs)
+    if (level === 'error') {
+        console.error(logMessage, data ? JSON.stringify(data, null, 2) : '');
+    } else if (level === 'warn') {
+        console.warn(logMessage, data ? JSON.stringify(data, null, 2) : '');
+    } else {
+        console.log(logMessage, data ? JSON.stringify(data, null, 2) : '');
+    }
+    
+    res.json({ success: true });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Proxy servidor funcionando' });
