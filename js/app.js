@@ -7,7 +7,7 @@ if (window.allcomAppInitialized) {
 // API Configuration
 const API_CONFIG = {
     endpoint: 'http://fota-api.jimicloud.com', // HTTPS para produção
-    proxyEndpoint: 'http://localhost:3001/api', // HTTPS para proxy
+    proxyEndpoint: '/api',
     appKey: 'Jimiiotbrasil',
     secret: '23dd6cca658b4ec298aeb7beb4972fd4',
     maxBatchSize: 99
