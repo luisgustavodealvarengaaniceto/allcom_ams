@@ -13,7 +13,15 @@ const API_CONFIG = {
     maxBatchSize: 99
 };
 
-console.log('🔧 API_CONFIG carregado:', API_CONFIG);
+console.log('🔧 API_CONFIG carregado (com logs detalhados):');
+console.log('  - endpoint:', API_CONFIG.endpoint);
+console.log('  - proxyEndpoint:', API_CONFIG.proxyEndpoint);
+console.log('  - appKey:', API_CONFIG.appKey);
+console.log('  - secret length:', API_CONFIG.secret ? API_CONFIG.secret.length : 'undefined');
+console.log('  - maxBatchSize:', API_CONFIG.maxBatchSize);
+console.log('  - window.location:', window.location.href);
+console.log('  - protocol:', window.location.protocol);
+console.log('  - host:', window.location.host);
 
 // Global state
 let deviceResults = [];
@@ -67,6 +75,25 @@ const selectedFirmwareText = document.getElementById('selectedFirmwareText');
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM carregado, inicializando app...');
+    
+    // DIAGNOSTIC: Verificar se API_CONFIG foi alterado
+    console.log('🔍 VERIFICAÇÃO API_CONFIG INICIAL:');
+    console.log('  - endpoint:', API_CONFIG.endpoint);
+    console.log('  - proxyEndpoint:', API_CONFIG.proxyEndpoint);
+    console.log('  - typeof API_CONFIG:', typeof API_CONFIG);
+    console.log('  - JSON.stringify:', JSON.stringify(API_CONFIG, null, 2));
+    
+    // Check if there's any environment override
+    if (typeof process !== 'undefined' && process.env) {
+        console.log('🔍 PROCESS.ENV detectado:', process.env);
+    }
+    
+    // Check window variables that might affect config
+    console.log('🔍 WINDOW VARIABLES:');
+    console.log('  - window.location.href:', window.location.href);
+    console.log('  - window.location.protocol:', window.location.protocol);
+    console.log('  - window.location.host:', window.location.host);
+    console.log('  - window.location.port:', window.location.port);
     
     // Check initial modal state
     const initialModal = document.getElementById('deviceModal');
@@ -477,22 +504,33 @@ function createBatches(imeis, batchSize) {
 // Query device status from API with CORS handling
 async function queryDeviceStatus(imeiList, retries = 2) {
     const batchId = Math.random().toString(36).substr(2, 9);
-    console.log(`[${batchId}] Consultando ${imeiList.length} IMEIs:`, imeiList.slice(0, 3).join(', ') + (imeiList.length > 3 ? '...' : ''));
+    console.log(`[${batchId}] === INICIANDO CONSULTA ===`);
+    console.log(`[${batchId}] IMEIs: ${imeiList.length} - ${imeiList.slice(0, 3).join(', ')}${imeiList.length > 3 ? '...' : ''}`);
+    console.log(`[${batchId}] Retries configurados: ${retries}`);
     
     // First try to use local proxy server
     try {
-        console.log(`[${batchId}] Tentando usar servidor proxy local...`);
+        console.log(`[${batchId}] TENTATIVA 1: Servidor proxy local`);
         const results = await queryWithProxy(imeiList, batchId);
-        console.log(`[${batchId}] Sucesso via proxy: ${results.length} resultados retornados`);
+        console.log(`[${batchId}] ✅ SUCESSO via proxy: ${results.length} resultados`);
         return results;
     } catch (proxyError) {
-        console.log(`[${batchId}] Proxy indisponível, tentando acesso direto:`, proxyError.message);
+        console.log(`[${batchId}] ❌ PROXY FALHOU:`, proxyError.message);
+        console.log(`[${batchId}] Erro completo do proxy:`, proxyError);
     }
     
     // Fallback to direct API access
+    console.log(`[${batchId}] TENTATIVA 2: Acesso direto à API`);
     for (let attempt = 1; attempt <= retries + 1; attempt++) {
         try {
+            console.log(`[${batchId}] Tentativa direta ${attempt}/${retries + 1}`);
+            
             const authData = getAuthToken();
+            console.log(`[${batchId}] Token gerado:`, {
+                appkey: authData.appkey,
+                timestamp: authData.timestamp,
+                sign: authData.sign ? authData.sign.substring(0, 8) + '...' : 'undefined'
+            });
             
             // Create abort controller for timeout
             const controller = new AbortController();
@@ -514,8 +552,11 @@ async function queryDeviceStatus(imeiList, retries = 2) {
                 credentials: 'omit' // Don't send credentials
             };
             
-            console.log(`[${batchId}] Tentativa ${attempt} - acesso direto à API`);
-            const response = await fetch(`${API_CONFIG.endpoint}/queryDeviceStatus`, requestOptions);
+            const apiUrl = `${API_CONFIG.endpoint}/queryDeviceStatus`;
+            console.log(`[${batchId}] URL da API: ${apiUrl}`);
+            console.log(`[${batchId}] Headers:`, requestOptions.headers);
+            
+            const response = await fetch(apiUrl, requestOptions);
             
             clearTimeout(timeoutId);
             
@@ -575,8 +616,14 @@ async function queryWithProxy(imeiList, batchId) {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for proxy
     
     const proxyUrl = `${API_CONFIG.proxyEndpoint}/queryDeviceStatus`;
-    console.log('🌐 queryWithProxy URL:', proxyUrl);
-    console.log('🔧 API_CONFIG.proxyEndpoint:', API_CONFIG.proxyEndpoint);
+    console.log('🌐 queryWithProxy - Detalhes completos:');
+    console.log('  - proxyUrl final:', proxyUrl);
+    console.log('  - API_CONFIG.proxyEndpoint:', API_CONFIG.proxyEndpoint);
+    console.log('  - window.location.origin:', window.location.origin);
+    console.log('  - window.location.host:', window.location.host);
+    console.log('  - window.location.port:', window.location.port);
+    console.log('  - batchId:', batchId);
+    console.log('  - imeiList length:', imeiList.length);
     
     try {
         const response = await fetch(proxyUrl, {
@@ -637,12 +684,23 @@ function parseApiResponse(data, batchId) {
 // Get authentication token
 function getAuthToken() {
     try {
+        console.log('🔐 getAuthToken - Iniciando geração do token');
+        console.log('  - API_CONFIG.appKey:', API_CONFIG.appKey);
+        console.log('  - API_CONFIG.secret length:', API_CONFIG.secret ? API_CONFIG.secret.length : 'undefined');
+        
         // For JimiCloud API, generate MD5 signature
         const timestamp = Date.now();
         const signString = `${API_CONFIG.appKey}${timestamp}${API_CONFIG.secret}`;
         
+        console.log('  - timestamp:', timestamp);
+        console.log('  - signString length:', signString.length);
+        console.log('  - signString preview:', signString.substring(0, 50) + '...');
+        
         // Simple MD5 implementation for browser
         const sign = generateMD5(signString);
+        
+        console.log('  - sign gerado:', sign);
+        console.log('✅ Token gerado com sucesso');
         
         return {
             appkey: API_CONFIG.appKey,
@@ -650,61 +708,81 @@ function getAuthToken() {
             sign: sign
         };
     } catch (error) {
-        throw new Error('Erro ao gerar token de autenticação');
+        console.error('❌ Erro detalhado ao gerar token:', error);
+        console.error('  - error.name:', error.name);
+        console.error('  - error.message:', error.message);
+        console.error('  - error.stack:', error.stack);
+        throw new Error('Erro ao gerar token de autenticação: ' + error.message);
     }
 }
 
 // Simple MD5 hash function for browser - Pure JavaScript implementation
 function generateMD5(str) {
-    // MD5 Pure JavaScript implementation
-    function md5(d) {
-        var r = M(V(Y(X(d), 8 * d.length)));
-        return r.toLowerCase();
+    console.log('🔐 generateMD5 chamado com string length:', str ? str.length : 'undefined');
+    
+    if (!str) {
+        console.error('❌ generateMD5: string vazia ou undefined');
+        throw new Error('String para hash MD5 está vazia');
     }
-    function M(d) {
-        for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++) _ = d.charCodeAt(r), f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _);
-        return f;
-    }
-    function X(d) {
-        for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++) _[m] = 0;
-        for (m = 0; m < 8 * d.length; m += 8) _[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32;
-        return _;
-    }
-    function V(d) {
-        for (var _ = "", m = 0; m < 32 * d.length; m += 8) _ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255);
-        return _;
-    }
-    function Y(d, _) {
-        d[_ >> 5] |= 128 << _ % 32, d[14 + (_ + 64 >>> 9 << 4)] = _;
-        for (var m = 1732584193, f = -271733879, r = -1732584194, i = 271733878, n = 0; n < d.length; n += 16) {
-            var h = m, t = f, g = r, e = i;
-            f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 0], 7, -680876936), f, r, d[n + 1], 12, -389564586), m, f, d[n + 2], 17, 606105819), i, m, d[n + 3], 22, -1044525330), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 4], 7, -176418897), f, r, d[n + 5], 12, 1200080426), m, f, d[n + 6], 17, -1473231341), i, m, d[n + 7], 22, -45705983), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 8], 7, 1770035416), f, r, d[n + 9], 12, -1958414417), m, f, d[n + 10], 17, -42063), i, m, d[n + 11], 22, -1990404162), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 12], 7, 1804603682), f, r, d[n + 13], 12, -40341101), m, f, d[n + 14], 17, -1502002290), i, m, d[n + 15], 22, 1236535329), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 1], 5, -165796510), f, r, d[n + 6], 9, -1069501632), m, f, d[n + 11], 14, 643717713), i, m, d[n + 0], 20, -373897302), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 5], 5, -701558691), f, r, d[n + 10], 9, 38016083), m, f, d[n + 15], 14, -660478335), i, m, d[n + 4], 20, -405537848), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 9], 5, 568446438), f, r, d[n + 14], 9, -1019803690), m, f, d[n + 3], 14, -187363961), i, m, d[n + 8], 20, 1163531501), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 13], 5, -1444681467), f, r, d[n + 2], 9, -51403784), m, f, d[n + 7], 14, 1735328473), i, m, d[n + 12], 20, -1926607734), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 5], 4, -378558), f, r, d[n + 8], 11, -2022574463), m, f, d[n + 11], 16, 1839030562), i, m, d[n + 14], 23, -35309556), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 1], 4, -1530992060), f, r, d[n + 4], 11, 1272893353), m, f, d[n + 7], 16, -155497632), i, m, d[n + 10], 23, -1094730640), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 13], 4, 681279174), f, r, d[n + 0], 11, -358537222), m, f, d[n + 3], 16, -722521979), i, m, d[n + 6], 23, 76029189), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 9], 4, -640364487), f, r, d[n + 12], 11, -421815835), m, f, d[n + 15], 16, 530742520), i, m, d[n + 2], 23, -995338651), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 0], 6, -198630844), f, r, d[n + 7], 10, 1126891415), m, f, d[n + 14], 15, -1416354905), i, m, d[n + 5], 21, -57434055), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 12], 6, 1700485571), f, r, d[n + 3], 10, -1894986606), m, f, d[n + 10], 15, -1051523), i, m, d[n + 1], 21, -2054922799), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 8], 6, 1873313359), f, r, d[n + 15], 10, -30611744), m, f, d[n + 6], 15, -1560198380), i, m, d[n + 13], 21, 1309151649), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 4], 6, -145523070), f, r, d[n + 11], 10, -1120210379), m, f, d[n + 2], 15, 718787259), i, m, d[n + 9], 21, -343485551), m = safe_add(m, h), f = safe_add(f, t), r = safe_add(r, g), i = safe_add(i, e);
+    
+    try {
+        // MD5 Pure JavaScript implementation
+        function md5(d) {
+            var r = M(V(Y(X(d), 8 * d.length)));
+            return r.toLowerCase();
         }
-        return Array(m, f, r, i);
+        function M(d) {
+            for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++) _ = d.charCodeAt(r), f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _);
+            return f;
+        }
+        function X(d) {
+            for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++) _[m] = 0;
+            for (m = 0; m < 8 * d.length; m += 8) _[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32;
+            return _;
+        }
+        function V(d) {
+            for (var _ = "", m = 0; m < 32 * d.length; m += 8) _ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255);
+            return _;
+        }
+        function Y(d, _) {
+            d[_ >> 5] |= 128 << _ % 32, d[14 + (_ + 64 >>> 9 << 4)] = _;
+            for (var m = 1732584193, f = -271733879, r = -1732584194, i = 271733878, n = 0; n < d.length; n += 16) {
+                var h = m, t = f, g = r, e = i;
+                f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 0], 7, -680876936), f, r, d[n + 1], 12, -389564586), m, f, d[n + 2], 17, 606105819), i, m, d[n + 3], 22, -1044525330), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 4], 7, -176418897), f, r, d[n + 5], 12, 1200080426), m, f, d[n + 6], 17, -1473231341), i, m, d[n + 7], 22, -45705983), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 8], 7, 1770035416), f, r, d[n + 9], 12, -1958414417), m, f, d[n + 10], 17, -42063), i, m, d[n + 11], 22, -1990404162), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 12], 7, 1804603682), f, r, d[n + 13], 12, -40341101), m, f, d[n + 14], 17, -1502002290), i, m, d[n + 15], 22, 1236535329), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 1], 5, -165796510), f, r, d[n + 6], 9, -1069501632), m, f, d[n + 11], 14, 643717713), i, m, d[n + 0], 20, -373897302), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 5], 5, -701558691), f, r, d[n + 10], 9, 38016083), m, f, d[n + 15], 14, -660478335), i, m, d[n + 4], 20, -405537848), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 9], 5, 568446438), f, r, d[n + 14], 9, -1019803690), m, f, d[n + 3], 14, -187363961), i, m, d[n + 8], 20, 1163531501), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 13], 5, -1444681467), f, r, d[n + 2], 9, -51403784), m, f, d[n + 7], 14, 1735328473), i, m, d[n + 12], 20, -1926607734), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 5], 4, -378558), f, r, d[n + 8], 11, -2022574463), m, f, d[n + 11], 16, 1839030562), i, m, d[n + 14], 23, -35309556), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 1], 4, -1530992060), f, r, d[n + 4], 11, 1272893353), m, f, d[n + 7], 16, -155497632), i, m, d[n + 10], 23, -1094730640), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 13], 4, 681279174), f, r, d[n + 0], 11, -358537222), m, f, d[n + 3], 16, -722521979), i, m, d[n + 6], 23, 76029189), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 9], 4, -640364487), f, r, d[n + 12], 11, -421815835), m, f, d[n + 15], 16, 530742520), i, m, d[n + 2], 23, -995338651), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 0], 6, -198630844), f, r, d[n + 7], 10, 1126891415), m, f, d[n + 14], 15, -1416354905), i, m, d[n + 5], 21, -57434055), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 12], 6, 1700485571), f, r, d[n + 3], 10, -1894986606), m, f, d[n + 10], 15, -1051523), i, m, d[n + 1], 21, -2054922799), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 8], 6, 1873313359), f, r, d[n + 15], 10, -30611744), m, f, d[n + 6], 15, -1560198380), i, m, d[n + 13], 21, 1309151649), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 4], 6, -145523070), f, r, d[n + 11], 10, -1120210379), m, f, d[n + 2], 15, 718787259), i, m, d[n + 9], 21, -343485551), m = safe_add(m, h), f = safe_add(f, t), r = safe_add(r, g), i = safe_add(i, e);
+            }
+            return Array(m, f, r, i);
+        }
+        function md5_cmn(d, _, m, f, r, i) {
+            return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, i)), r), m);
+        }
+        function md5_ff(d, _, m, f, r, i, n) {
+            return md5_cmn(_ & m | ~_ & f, d, _, r, i, n);
+        }
+        function md5_gg(d, _, m, f, r, i, n) {
+            return md5_cmn(_ & f | m & ~f, d, _, r, i, n);
+        }
+        function md5_hh(d, _, m, f, r, i, n) {
+            return md5_cmn(_ ^ m ^ f, d, _, r, i, n);
+        }
+        function md5_ii(d, _, m, f, r, i, n) {
+            return md5_cmn(m ^ (_ | ~f), d, _, r, i, n);
+        }
+        function safe_add(d, _) {
+            var m = (65535 & d) + (65535 & _);
+            return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m;
+        }
+        function bit_rol(d, _) {
+            return d << _ | d >>> 32 - _;
+        }
+        
+        const result = md5(str);
+        console.log('✅ generateMD5 concluído, hash length:', result.length);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Erro na função MD5:', error);
+        throw error;
     }
-    function md5_cmn(d, _, m, f, r, i) {
-        return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, i)), r), m);
-    }
-    function md5_ff(d, _, m, f, r, i, n) {
-        return md5_cmn(_ & m | ~_ & f, d, _, r, i, n);
-    }
-    function md5_gg(d, _, m, f, r, i, n) {
-        return md5_cmn(_ & f | m & ~f, d, _, r, i, n);
-    }
-    function md5_hh(d, _, m, f, r, i, n) {
-        return md5_cmn(_ ^ m ^ f, d, _, r, i, n);
-    }
-    function md5_ii(d, _, m, f, r, i, n) {
-        return md5_cmn(m ^ (_ | ~f), d, _, r, i, n);
-    }
-    function safe_add(d, _) {
-        var m = (65535 & d) + (65535 & _);
-        return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m;
-    }
-    function bit_rol(d, _) {
-        return d << _ | d >>> 32 - _;
-    }
-    return md5(str);
 }
 
 // Process and enhance results
