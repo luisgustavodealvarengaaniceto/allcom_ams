@@ -162,21 +162,44 @@ function generateMD5(str) {
     return crypto.createHash('md5').update(str).digest('hex');
 }
 
-// Proxy endpoint for JimiCloud API
+// Proxy endpoint for JimiCloud API - POST /queryDeviceStatus
 app.post('/api/queryDeviceStatus', async (req, res) => {
     console.log('Proxy: === NOVA REQUISIÇÃO RECEBIDA ===');
-    console.log('Proxy: Headers:', req.headers);
-    console.log('Proxy: Body:', req.body);
+    console.log('Proxy: User-Agent:', req.headers['user-agent']);
+    console.log('Proxy: Content-Type:', req.headers['content-type']);
+    console.log('Proxy: Body tipo:', typeof req.body);
+    console.log('Proxy: Body content:', JSON.stringify(req.body, null, 2));
     
     try {
         const { imeiList } = req.body;
         
-        console.log('Proxy: Recebendo requisição para', imeiList.length, 'IMEIs');
+        // Validate request data
+        if (!imeiList) {
+            console.error('Proxy: Erro - imeiList não fornecido');
+            return res.status(400).json({
+                error: 'Dados inválidos',
+                message: 'Lista de IMEIs é obrigatória',
+                received: req.body
+            });
+        }
+        
+        if (!Array.isArray(imeiList)) {
+            console.error('Proxy: Erro - imeiList não é array:', typeof imeiList);
+            return res.status(400).json({
+                error: 'Dados inválidos',
+                message: 'imeiList deve ser um array',
+                received: typeof imeiList
+            });
+        }
+        
+        console.log('Proxy: Recebendo requisição para', imeiList.length, 'IMEIs:', imeiList.slice(0, 3));
         
         // Step 1: Get authentication token
+        console.log('Proxy: Obtendo token de autenticação...');
         let token;
         try {
             token = await getAuthToken();
+            console.log('Proxy: Token obtido com sucesso:', token.substring(0, 30) + '...');
         } catch (tokenError) {
             console.error('Proxy: Falha ao obter token:', tokenError.message);
             return res.status(401).json({
@@ -186,111 +209,67 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
             });
         }
         
-        // Step 2: Make authenticated request to query device status
-        console.log('Proxy: Fazendo requisição autenticada com token');
+        // Step 2: Make authenticated POST request to /queryDeviceStatus endpoint
+        console.log('Proxy: Fazendo POST para /queryDeviceStatus com Authorization token...');
+        console.log('Proxy: Request body para API:', JSON.stringify({ imeiList }, null, 2));
         
-        // Based on API documentation: Authorization header is required
-        let response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
+        const response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
             method: 'POST',
             headers: {
-                'Authorization': token,  // Just the token, no "Bearer" prefix
+                'Authorization': token,  // Token sem prefixo "Bearer" conforme documentação
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ imeiList }),
-            timeout: 45000  // Increased timeout to 45 seconds
+            body: JSON.stringify({ 
+                imeiList: imeiList 
+            }),
+            timeout: CONFIG.API_TIMEOUT
         });
         
-        // If plain token fails, try Bearer format
-        if (!response.ok && response.status === 401) {
-            console.log('Proxy: Token simples falhou, tentando Bearer');
-            
-            response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ imeiList }),
-                timeout: 30000
-            });
-        }
+        console.log('Proxy: Resposta do queryDeviceStatus:', response.status, response.statusText);
+        console.log('Proxy: Response headers:', Object.fromEntries(response.headers));
         
-        // If Bearer fails, try token header
-        if (!response.ok && response.status === 401) {
-            console.log('Proxy: Bearer falhou, tentando header "token"');
-            
-            response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
-                method: 'POST',
-                headers: {
-                    'token': token,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ imeiList }),
-                timeout: 30000
-            });
-        }
-        
-        // If all token methods fail, try fallback MD5 method
-        if (!response.ok && response.status === 401) {
-            console.log('Proxy: Todos os métodos de token falharam, tentando método MD5 como fallback');
-            
-            const timestamp = Date.now();
-            const signString = `${CONFIG.JIMICLOUD_APP_KEY}${timestamp}${CONFIG.JIMICLOUD_SECRET}`;
-            const sign = generateMD5(signString);
-            
-            response = await fetch(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'appkey': CONFIG.JIMICLOUD_APP_KEY,
-                    'timestamp': timestamp.toString(),
-                    'sign': sign
-                },
-                body: JSON.stringify({ imeiList }),
-                timeout: 30000
-            });
-        }
-        
-        // If still failing, try query parameters method
-        if (!response.ok && response.status === 401) {
-            console.log('Proxy: MD5 falhou, tentando query parameters');
-            
-            const timestamp = Date.now();
-            const signString = `${CONFIG.JIMICLOUD_APP_KEY}${timestamp}${CONFIG.JIMICLOUD_SECRET}`;
-            const sign = generateMD5(signString);
-            
-            const url = new URL(`${CONFIG.API_ENDPOINT}/queryDeviceStatus`);
-            url.searchParams.append('appkey', CONFIG.JIMICLOUD_APP_KEY);
-            url.searchParams.append('timestamp', timestamp.toString());
-            url.searchParams.append('sign', sign);
-            
-            response = await fetch(url.toString(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ imeiList }),
-                timeout: 30000
-            });
-        }
+        // Get response text first to handle both JSON and text responses
+        const responseText = await response.text();
+        console.log('Proxy: Response body raw:', responseText);
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Proxy: Resposta de erro:', response.status, errorText);
-            throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+            console.error('Proxy: Resposta de erro HTTP:', response.status, responseText);
+            
+            // Try to parse as JSON for better error details
+            let errorData;
+            try {
+                errorData = JSON.parse(responseText);
+            } catch (parseError) {
+                errorData = { message: responseText };
+            }
+            
+            return res.status(response.status).json({
+                error: 'Erro da API JimiCloud',
+                message: `HTTP ${response.status}: ${response.statusText}`,
+                details: errorData,
+                apiResponse: responseText
+            });
         }
         
-        const data = await response.json();
-        console.log('Proxy: Resposta recebida da API JimiCloud:', data);
+        // Try to parse response as JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Proxy: Erro ao fazer parse da resposta JSON:', parseError.message);
+            return res.status(500).json({
+                error: 'Resposta inválida da API',
+                message: 'A API retornou dados que não são JSON válido',
+                details: responseText.substring(0, 1000)
+            });
+        }
+        
+        console.log('Proxy: Resposta JSON parseada da API JimiCloud:', JSON.stringify(data, null, 2));
         
         // Check if the API returned an error in the response body
         if (data.code && data.code !== 0) {
-            console.error('Proxy: API retornou erro:', data);
+            console.error('Proxy: API retornou código de erro:', data.code, data.msg);
             return res.status(500).json({
                 error: 'Erro da API JimiCloud',
                 message: data.msg || 'Erro desconhecido da API',
@@ -299,10 +278,16 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
             });
         }
         
+        // Success - return the data
+        console.log('Proxy: Sucesso! Retornando dados para frontend');
         res.json(data);
         
     } catch (error) {
-        console.error('Proxy: Erro:', error.message);
+        console.error('Proxy: === ERRO CRÍTICO ===');
+        console.error('Proxy: Erro tipo:', error.constructor.name);
+        console.error('Proxy: Erro mensagem:', error.message);
+        console.error('Proxy: Stack trace:', error.stack);
+        console.error('Proxy: Request body recebido:', req.body);
         
         // Handle different types of errors
         if (error.message.includes('ETIMEDOUT') || error.message.includes('timeout')) {
@@ -327,6 +312,36 @@ app.post('/api/queryDeviceStatus', async (req, res) => {
     }
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    const isProd = process.env.NODE_ENV === 'production';
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: isProd ? 'production' : 'development',
+        api_endpoint: CONFIG.API_ENDPOINT,
+        version: '1.0.0'
+    });
+});
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+    console.error('Middleware de erro:', error);
+    res.status(500).json({
+        error: 'Erro interno do servidor',
+        message: 'Ocorreu um erro inesperado'
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    console.log(`404 - ${req.method} ${req.url}`);
+    res.status(404).json({
+        error: 'Endpoint não encontrado',
+        message: `${req.method} ${req.url} não foi encontrado`
+    });
+});
+
 // Logging endpoint for frontend
 app.post('/api/log', (req, res) => {
     const { level, message, data, timestamp, url } = req.body;
@@ -347,11 +362,6 @@ app.post('/api/log', (req, res) => {
     res.json({ success: true });
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Proxy servidor funcionando' });
-});
-
 app.listen(PORT, HOST, () => {
     const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
     const isProd = process.env.NODE_ENV === 'production';
@@ -366,7 +376,7 @@ app.listen(PORT, HOST, () => {
     console.log(`🔐 Login: ${baseUrl}/login.html`);
     console.log(`📊 Sistema: ${baseUrl}/index.html`);
     console.log(`🔧 API Proxy: ${baseUrl}/api/queryDeviceStatus`);
-    console.log(`� Health check: ${baseUrl}/health`);
+    console.log(`💚 Health check: ${baseUrl}/health`);
     console.log('');
     console.log(`✅ Pronto para uso! Acesse ${baseUrl} para começar`);
     

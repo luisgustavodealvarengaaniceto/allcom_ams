@@ -464,103 +464,24 @@ async function queryDeviceStatus(imeiList, retries = 2) {
         retries
     });
     
-    // First try to use local proxy server
+    // Always use proxy server - no direct API access to avoid CORS
     try {
         const results = await queryWithProxy(imeiList, batchId);
         serverLog('info', 'Sucesso via proxy', { batchId, resultCount: results.length });
         return results;
     } catch (proxyError) {
-        serverLog('warn', 'Proxy falhou, tentando acesso direto', {
+        serverLog('error', 'Proxy falhou', {
             batchId,
             error: proxyError.message
         });
-    }
-    
-    // Fallback to direct API access
-    for (let attempt = 1; attempt <= retries + 1; attempt++) {
-        try {
-            const authData = getAuthToken();
-            
-            // Create abort controller for timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
-            
-            const requestOptions = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache',
-                    'appkey': authData.appkey,
-                    'timestamp': authData.timestamp,
-                    'sign': authData.sign
-                },
-                body: JSON.stringify({ imeiList }),
-                signal: controller.signal,
-                mode: 'cors', // Explicitly set CORS mode
-                credentials: 'omit' // Don't send credentials
-            };
-            
-            const apiUrl = `${API_CONFIG.endpoint}/queryDeviceStatus`;
-            
-            serverLog('info', 'Tentativa de acesso direto à API', {
-                batchId,
-                attempt,
-                apiUrl,
-                tokenGenerated: !!authData.sign
-            });
-            
-            const response = await fetch(apiUrl, requestOptions);
-            
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            const results = parseApiResponse(data, batchId);
-            
-            serverLog('info', 'Sucesso no acesso direto', { batchId, resultCount: results.length });
-            return results;
-            
-        } catch (error) {
-            serverLog('error', 'Falha na tentativa de acesso direto', {
-                batchId,
-                attempt,
-                error: error.message,
-                errorType: error.name
-            });
-            
-            if (error.name === 'AbortError') {
-                if (attempt <= retries) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    continue;
-                }
-                throw new Error('Timeout na requisição à API. Tente novamente com menos IMEIs.');
-            }
-            
-            if (error.name === 'TypeError' && 
-                (error.message.includes('fetch') || 
-                 error.message.includes('Failed to fetch') ||
-                 error.message.includes('CORS'))) {
-                
-                if (attempt <= retries) {
-                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                    continue;
-                }
-                
-                throw new Error('Erro de CORS. Para resolver:\n1. Execute o servidor proxy: npm start\n2. Ou configure CORS no servidor da API\n3. Ou use uma extensão do navegador para desabilitar CORS');
-            }
-            
-            // For HTTP errors or other errors, retry with exponential backoff
-            if (attempt <= retries) {
-                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Max 5 seconds
-                await new Promise(resolve => setTimeout(resolve, delay));
-                continue;
-            }
-            
-            throw error;
+        
+        // Provide helpful error message instead of trying direct access
+        if (proxyError.message.includes('Servidor proxy não está rodando')) {
+            throw new Error('Servidor proxy não está rodando. Execute "npm start" para iniciar o servidor proxy.');
+        } else if (proxyError.message.includes('Timeout')) {
+            throw new Error('Timeout na consulta. Tente novamente com menos IMEIs ou aguarde alguns segundos.');
+        } else {
+            throw new Error(`Erro na consulta: ${proxyError.message}`);
         }
     }
 }
@@ -755,6 +676,9 @@ function processResults() {
         
         // Extract additional system information
         device.systemInfo = extractSystemInfo(device.log);
+        
+        // Extract network configuration information
+        device.networkConfig = extractNetworkConfig(device);
     });
     
     filteredResults = [...deviceResults];
@@ -996,6 +920,144 @@ function extractSystemInfo(log) {
     systemInfo.channels = channels;
     
     return systemInfo;
+}
+
+// Extract network configuration information with ultra robust search
+function extractNetworkConfig(device) {
+    const config = {
+        server: 'N/A',
+        apn: 'N/A',
+        urltype: 'N/A',
+        wakemode: 'N/A'
+    };
+    
+    // Ultra robust search function
+    function ultraRobustSearch(patterns, fieldName) {
+        // Convert patterns to array if it's a single pattern
+        if (typeof patterns === 'string') {
+            patterns = [patterns];
+        }
+        
+        // Collect all text content from the device object
+        const textSources = [];
+        
+        function collectTextSources(obj, depth = 0) {
+            if (depth > 10) return; // Prevent infinite recursion
+            
+            if (!obj) return;
+            
+            if (typeof obj === 'string') {
+                textSources.push(obj);
+            } else if (typeof obj === 'object' && obj !== null) {
+                for (const [key, value] of Object.entries(obj)) {
+                    if (typeof value === 'string') {
+                        textSources.push(value);
+                    } else if (typeof value === 'object' && value !== null) {
+                        collectTextSources(value, depth + 1);
+                    }
+                }
+            }
+        }
+        
+        // Collect all text sources from device
+        collectTextSources(device);
+        
+        // Search through all collected text sources
+        for (const text of textSources) {
+            if (!text || typeof text !== 'string') continue;
+            
+            // Try each pattern on this text
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    let cleanValue = match[1].trim();
+                    
+                    // Advanced cleaning
+                    cleanValue = cleanValue
+                        .replace(/[;,\|\s]+$/, '') // Remove trailing separators
+                        .replace(/^[;,\|\s]+/, '') // Remove leading separators
+                        .replace(/["']/g, '') // Remove quotes
+                        .trim();
+                    
+                    // Additional validation - skip empty or invalid values
+                    if (cleanValue && 
+                        cleanValue !== '' && 
+                        cleanValue.toLowerCase() !== 'na' && 
+                        cleanValue.toLowerCase() !== 'n/a' &&
+                        cleanValue.toLowerCase() !== 'null' &&
+                        cleanValue.toLowerCase() !== 'undefined') {
+                        
+                        // For APN, get only the first part if comma-separated
+                        if (fieldName === 'APN' && cleanValue.includes(',')) {
+                            const parts = cleanValue.split(',');
+                            cleanValue = parts[0].trim();
+                        }
+                        
+                        // For SERVER, get only the first part if comma-separated
+                        if (fieldName === 'SERVER' && cleanValue.includes(',')) {
+                            const parts = cleanValue.split(',');
+                            cleanValue = parts[0].trim();
+                        }
+                        
+                        return cleanValue;
+                    }
+                }
+            }
+        }
+        
+        return 'N/A';
+    }
+    
+    // SERVER patterns - comprehensive matching
+    const serverPatterns = [
+        /SERVER[:\s]*([^;,\n\r]+)/i,
+        /server[:\s]*([^;,\n\r]+)/i,
+        /srv[:\s]*([^;,\n\r]+)/i,
+        /host[:\s]*([^;,\n\r]+)/i,
+        /ip[:\s]*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[^;,\n\r]*)/i,
+        /([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:\d+)/i
+    ];
+    config.server = ultraRobustSearch(serverPatterns, 'SERVER');
+    
+    // APN patterns - comprehensive matching
+    const apnPatterns = [
+        /APN[:\s]*([^;,\n\r]+)/i,
+        /apn[:\s]*([^;,\n\r]+)/i,
+        /access[_\s]*point[_\s]*name[:\s]*([^;,\n\r]+)/i,
+        /network[_\s]*name[:\s]*([^;,\n\r]+)/i,
+        /carrier[_\s]*name[:\s]*([^;,\n\r]+)/i
+    ];
+    config.apn = ultraRobustSearch(apnPatterns, 'APN');
+    
+    // URLTYPE patterns - comprehensive matching including common typos
+    const urltypePatterns = [
+        /URLTYPE[:\s]*([^;,\n\r]+)/i,
+        /urltype[:\s]*([^;,\n\r]+)/i,
+        /URLTPYE[:\s]*([^;,\n\r]+)/i,  // Common typo found in examples
+        /urltpye[:\s]*([^;,\n\r]+)/i,  // Common typo found in examples
+        /URL[_\s]*TYPE[:\s]*([^;,\n\r]+)/i,
+        /url[_\s]*type[:\s]*([^;,\n\r]+)/i,
+        /PROTOCOL[_\s]*TYPE[:\s]*([^;,\n\r]+)/i,
+        /protocol[_\s]*type[:\s]*([^;,\n\r]+)/i,
+        /connection[_\s]*type[:\s]*([^;,\n\r]+)/i
+    ];
+    config.urltype = ultraRobustSearch(urltypePatterns, 'URLTYPE');
+    
+    // WAKEMODE patterns - comprehensive matching
+    const wakemodePatterns = [
+        /WAKEMODE[:\s]*([^;,\n\r]+)/i,
+        /wakemode[:\s]*([^;,\n\r]+)/i,
+        /WAKE[_\s]*MODE[:\s]*([^;,\n\r]+)/i,
+        /wake[_\s]*mode[:\s]*([^;,\n\r]+)/i,
+        /SLEEP[_\s]*MODE[:\s]*([^;,\n\r]+)/i,
+        /sleep[_\s]*mode[:\s]*([^;,\n\r]+)/i,
+        /POWER[_\s]*MODE[:\s]*([^;,\n\r]+)/i,
+        /power[_\s]*mode[:\s]*([^;,\n\r]+)/i,
+        /wake[_\s]*up[_\s]*mode[:\s]*([^;,\n\r]+)/i
+    ];
+    config.wakemode = ultraRobustSearch(wakemodePatterns, 'WAKEMODE');
+    
+    return config;
 }
 
 // Show loading state
@@ -1301,6 +1363,22 @@ function showDeviceDetails(imei) {
                 <div class="detail-item">
                     <div class="detail-label">Modo</div>
                     <div class="detail-value">${device.mode || 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Servidor</div>
+                    <div class="detail-value code">${device.networkConfig?.server || 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">APN</div>
+                    <div class="detail-value code">${device.networkConfig?.apn || 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">URL Type</div>
+                    <div class="detail-value">${device.networkConfig?.urltype || 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Wake Mode</div>
+                    <div class="detail-value">${device.networkConfig?.wakemode || 'N/A'}</div>
                 </div>
             </div>
         </div>

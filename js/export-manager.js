@@ -35,6 +35,9 @@ class ExportManager {
             'Canal 3',
             'Canal 4',
             'Servidor',
+            'APN',
+            'URL Type',
+            'Wake Mode',
             'Firmware Comparação',
             'Prioridade Atualização'
         ];
@@ -67,7 +70,10 @@ class ExportManager {
             this.getChannelStatus(device.systemInfo?.channels, 2),
             this.getChannelStatus(device.systemInfo?.channels, 3),
             this.getChannelStatus(device.systemInfo?.channels, 4),
-            this.cleanText(device.server || 'N/A'),
+            this.cleanText(device.networkConfig?.server || device.server || 'N/A'),
+            this.cleanText(device.networkConfig?.apn || 'N/A'),
+            this.cleanText(device.networkConfig?.urltype || 'N/A'),
+            this.cleanText(device.networkConfig?.wakemode || 'N/A'),
             this.getFirmwareComparisonText(device.firmwareComparison),
             this.getFirmwarePriority(device.firmwareComparison)
         ]);
@@ -119,7 +125,10 @@ class ExportManager {
             'Canal 2': this.getChannelStatus(device.systemInfo?.channels, 2),
             'Canal 3': this.getChannelStatus(device.systemInfo?.channels, 3),
             'Canal 4': this.getChannelStatus(device.systemInfo?.channels, 4),
-            'Servidor': device.server || 'N/A',
+            'Servidor': device.networkConfig?.server || device.server || 'N/A',
+            'APN': device.networkConfig?.apn || 'N/A',
+            'URL Type': device.networkConfig?.urltype || 'N/A',
+            'Wake Mode': device.networkConfig?.wakemode || 'N/A',
             'Firmware Comparação': this.getFirmwareComparisonText(device.firmwareComparison),
             'Prioridade Atualização': this.getFirmwarePriority(device.firmwareComparison)
         }));
